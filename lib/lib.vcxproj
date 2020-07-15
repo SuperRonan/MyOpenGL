@@ -152,6 +152,7 @@
     <ClInclude Include="..\src\lib\ProgramDesc.h" />
     <ClInclude Include="..\src\lib\ShaderDesc.h" />
     <ClInclude Include="..\src\lib\ShaderLib.h" />
+    <ClInclude Include="..\src\lib\Transforms.h" />
     <ClInclude Include="..\src\lib\Vertex.h" />
   </ItemGroup>
   <ItemGroup>

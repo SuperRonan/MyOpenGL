@@ -39,6 +39,9 @@
     <ClInclude Include="..\src\lib\Vertex.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="..\src\lib\Transforms.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\src\lib\Log.cpp">

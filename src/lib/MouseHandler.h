@@ -9,10 +9,11 @@ namespace lib
 	{
 	public:
 
-		enum Mode {Position, Direction};
+		enum class Mode {Position, Direction};
 	
 	protected:
 
+		Mode m_mode;
 
 		using Vector2d = glm::vec < 2, double>;
 		using Vector2f = glm::vec < 2, float>;
@@ -23,14 +24,14 @@ namespace lib
 
 		GLFWwindow* m_window;
 		
-		
+		int m_prev_buttons[5];
+		int m_current_buttons[5];
 
 		// in degrees
 		double m_pitch, m_yaw;
 
 		void updatePhiTheta();
 
-		Mode m_mode;
 
 	public:
 
@@ -55,6 +56,15 @@ namespace lib
 		}
 
 		template <class Float>
+		Vector2d deltaPosition()const
+		{
+			glm::vec<2, Float> res;
+			res.x = m_delta.x;
+			res.y = m_delta.y;
+			return res;
+		}
+
+		template <class Float>
 		glm::vec<3, Float> direction()const
 		{
 			glm::vec<3, Float> res;
@@ -69,6 +79,12 @@ namespace lib
 
 
 		void setMode(Mode mode);
+
+		bool isButtonCurrentlyPressed(int id)const;
+
+		bool isButtonJustPressed(int id)const;
+
+		bool isButtonJustReleased(int id)const;
 
 		template <class Out>
 		Out& print(Out& out)const

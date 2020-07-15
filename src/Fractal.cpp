@@ -15,6 +15,7 @@
 #include <glm/gtc/matrix_inverse.hpp>
 #include <lib/Camera.h>
 #include <lib/MouseHandler.h>
+#include <lib/Transforms.h>
 
 
 void framebuffer_size_callback(GLFWwindow* window, int width, int height)
@@ -52,11 +53,11 @@ GLFWwindow* createCenteredWindow(int w, int h, const char* name)
 }
 
 
-float zoom = 1.0;
+float scroll = 0.0;
 
 void scroll_callback(GLFWwindow* window, double xoffset, double yoffset)
 {
-    zoom -= 0.1f * (float)yoffset;
+    scroll = (float)yoffset;
 }
 
 int main()
@@ -136,7 +137,7 @@ int main()
 
     assert(program.isLinked());
 
-    std::cout << "Program shader1: \n";
+    std::cout << "Fractal shader1: \n";
     program.printAttributes(std::cout);
     program.printUniforms(std::cout);
 
@@ -150,8 +151,13 @@ int main()
     glCullFace(GL_BACK);
     double t = glfwGetTime(), dt;
 
+    glm::mat3 zoom_matrix(1.f);
+    glm::vec2 translate(0.0f);
+    float zoom = 1.0f;
+
     while (!glfwWindowShouldClose(window))
     {
+        scroll = 0;
         {
             double new_t = glfwGetTime();
             dt = new_t - t;
@@ -168,39 +174,67 @@ int main()
         int width, height;
         glfwGetWindowSize(window, &width, &height);
         float aspect_ratio = float(width) / float(height);
-        // camera -> screen
-        glm::mat4 mat_P;
-        mat_P = glm::perspective(glm::radians(mouse_handler.fov), aspect_ratio, 0.01f, 1000.0f);
-        //mat_P = glm::ortho(0.0f, float(w), 0.0f, float(h), 0.01f, 100.0f);
+        if (width && height)
+        {
+            // camera -> screen
+            glm::mat4 mat_P;
+            mat_P = glm::perspective(glm::radians(mouse_handler.fov), aspect_ratio, 0.01f, 1000.0f);
+            //mat_P = glm::ortho(0.0f, float(w), 0.0f, float(h), 0.01f, 100.0f);
 
-        // world to camera
-        glm::mat4 mat_V = glm::scale(glm::mat4(1.f), { aspect_ratio, 1.f, 1.f });
+            // world to camera
+            const glm::mat4 mat_V = glm::scale(glm::mat4(1.f), { aspect_ratio, 1.f, 1.f });
 
-        // model to world
-        glm::mat4 mat_M = glm::translate(glm::mat4(1.f), { 0.f, 0.f, -1.f });
+            // model to world
+            const glm::mat4 mat_M = glm::translate(glm::mat4(1.f), { 0.f, 0.f, -1.f });
 
-        glm::mat3 mat_uv_to_fs = glm::mat3(1.f);
-        mat_uv_to_fs[0][0] = zoom / float(width) * aspect_ratio;
-        mat_uv_to_fs[1][1] = zoom / float(height);
+            glm::mat3 screen_coords_matrix = lib::scaleMatrix<3, float>({ 1.0f / float(height), 1.0f / float(height) });
 
-        glClearColor(0.2, 0.3, 0.3, 1.0);
-        glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+            if (mouse_handler.isButtonCurrentlyPressed(GLFW_MOUSE_BUTTON_1))
+            {
+                glm::vec2 delta_pos = mouse_handler.deltaPosition<float>();
+                glm::vec3 h_delta = (lib::scaleMatrix<3, float>({ zoom, zoom }) * glm::vec3(delta_pos, 1.0f));
+                translate -= glm::vec2(h_delta.x, h_delta.y);
+            }
+            else if (scroll != 0)
+            {
+                float ds = 0.05f;
+                float mult = scroll > 0 ? (1.0f / (1.0f + scroll * ds)) : ((-scroll * ds + 1.0f));
+                zoom *= mult;
+                glm::mat3 t_mat = lib::translateMatrix<3, float>(translate);
+                glm::mat3 t_mat_inv = lib::translateMatrix<3, float>(-translate);
 
-        glBindVertexArray(VAO);
-        program.use();
-        program.setUniform("u_V", mat_V);
-        program.setUniform("u_P", mat_P);
-        program.setUniform("u_M", mat_M);
-        program.setUniform("u_uv_to_fs", mat_uv_to_fs);
-        //glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
-        glDrawElements(GL_TRIANGLES, indices.size(), GL_UNSIGNED_INT, 0);
-        
+                glm::vec2 mouse_pos = mouse_handler.currentPosition<float>();
+                glm::mat3 mouse_T_matrix = lib::translateMatrix<3, float>(-mouse_pos);
+                glm::mat3 mouse_T_inv_matrix = lib::translateMatrix<3, float>(mouse_pos);
 
-        glBindVertexArray(0);
-        lib::ProgramDesc::useNone();
+                glm::mat3 zoom_mat = lib::scaleMatrix<3, float>({ zoom, zoom });
+                glm::mat3 zoom_mat_inv = lib::scaleMatrix<3, float>({ 1.f/zoom, 1.f/zoom });
+                
+                zoom_matrix = zoom_mat;
+
+                glm::vec2 mouse_T_pos = zoom_matrix * glm::vec3(mouse_pos, 1.f);
+                int i = 0;
+            }
+
+            glm::mat3 mat_uv_to_fs = screen_coords_matrix * lib::translateMatrix<3, float>(translate) * zoom_matrix ;
+
+            glClearColor(0.2, 0.3, 0.3, 1.0);
+            glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+
+            glBindVertexArray(VAO);
+            program.use();
+            program.setUniform("u_V", mat_V);
+            program.setUniform("u_P", mat_P);
+            program.setUniform("u_M", mat_M);
+            program.setUniform("u_uv_to_fs", mat_uv_to_fs);
+            //glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
+            glDrawElements(GL_TRIANGLES, indices.size(), GL_UNSIGNED_INT, 0);
+
+
+            glBindVertexArray(0);
+            lib::ProgramDesc::useNone();
+        }
     }
-
-
 
     glfwTerminate();
     return main_res;
