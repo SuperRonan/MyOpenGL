@@ -152,6 +152,7 @@ int main()
     double t = glfwGetTime(), dt;
 
     glm::mat3 zoom_matrix(1.f);
+    glm::vec2 zoom_t(0.f);
     glm::vec2 translate(0.0f);
     float zoom = 1.0f;
 
@@ -203,16 +204,18 @@ int main()
                 glm::mat3 t_mat = lib::translateMatrix<3, float>(translate);
                 glm::mat3 t_mat_inv = lib::translateMatrix<3, float>(-translate);
 
-                glm::vec2 mouse_pos = mouse_handler.currentPosition<float>();
-                glm::mat3 mouse_T_matrix = lib::translateMatrix<3, float>(-mouse_pos);
-                glm::mat3 mouse_T_inv_matrix = lib::translateMatrix<3, float>(mouse_pos);
+                glm::vec2 new_zoom_t = mouse_handler.currentPosition<float>();
+                //new_zoom_t = { 300, 200 };
+                glm::mat3 mouse_T_matrix = lib::translateMatrix<3, float>(-new_zoom_t);
+                glm::mat3 mouse_T_inv_matrix = lib::translateMatrix<3, float>(new_zoom_t);
 
                 glm::mat3 zoom_mat = lib::scaleMatrix<3, float>({ zoom, zoom });
                 glm::mat3 zoom_mat_inv = lib::scaleMatrix<3, float>({ 1.f/zoom, 1.f/zoom });
                 
-                zoom_matrix = zoom_mat;
+                zoom_matrix = mouse_T_inv_matrix * zoom_mat * mouse_T_matrix;
+                zoom_t = new_zoom_t;
 
-                glm::vec2 mouse_T_pos = zoom_matrix * glm::vec3(mouse_pos, 1.f);
+                glm::vec2 mouse_T_pos = zoom_matrix * glm::vec3(new_zoom_t, 1.f);
                 int i = 0;
             }
 
