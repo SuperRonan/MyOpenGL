@@ -48,4 +48,27 @@ namespace lib
 		}
 		return res;
 	}
+
+	template <int N, class Float>
+	glm::vec<N + 1, Float> homogenize(glm::vec<N, Float> const& vec, Float h=Float(1.0))
+	{
+		return glm::vec<N + 1, Float>(vec, h);
+	}
+
+	template <int N, class Float>
+	glm::vec<N, Float> deHomogenize(glm::vec<N + 1, Float> const& h_vec)
+	{
+		glm::vec<N, Float> res;
+		if (h_vec[N] != 0)
+		{
+			for (int i = 0; i < N; ++i)
+				res[i] = h_vec[i] / h_vec[N];
+		}
+		else
+		{
+			for (int i = 0; i < N; ++i)
+				res[i] = h_vec[i];
+		}
+		return res;
+	}
 }

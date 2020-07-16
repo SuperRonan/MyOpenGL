@@ -24,7 +24,7 @@ void framebuffer_size_callback(GLFWwindow* window, int width, int height)
 }
 
 
-void processInput(GLFWwindow* window, glm::vec3& moving, float& fov)
+void processInput(GLFWwindow* window, glm::vec3& moving, bool & reset)
 {
     if (glfwGetKey(window, GLFW_KEY_ESCAPE) == GLFW_PRESS)
         glfwSetWindowShouldClose(window, true);
@@ -41,6 +41,7 @@ void processInput(GLFWwindow* window, glm::vec3& moving, float& fov)
         moving.z += 1.0f;
     if (glfwGetKey(window, GLFW_KEY_LEFT_CONTROL) == GLFW_PRESS)
         moving.z -= 1.0f;
+    reset = glfwGetKey(window, GLFW_KEY_R) == GLFW_PRESS;
 }
 
 GLFWwindow* createCenteredWindow(int w, int h, const char* name)
@@ -69,7 +70,7 @@ int main()
     glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3);
     glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 3);
     glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
-    int w = 1920, h = 1080;
+    int w = 1280, h = 720;
 
     GLFWwindow* window = createCenteredWindow(w, h, "Fractal go Brrrrrr...");
     if (window == NULL)
@@ -168,8 +169,15 @@ int main()
         glfwPollEvents();
 
         glm::vec3 zqsd;
-
-        processInput(window, zqsd, mouse_handler.fov);
+        bool reset;
+        processInput(window, zqsd, reset);
+        if (reset)
+        {
+            zoom_matrix = glm::mat3(1.f);
+            zoom_t = glm::vec2(0.f);
+            translate = glm::vec2(0.f);
+            zoom = 1.f;
+        }
         mouse_handler.update(dt);
 
         int width, height;
@@ -198,24 +206,29 @@ int main()
             }
             else if (scroll != 0)
             {
+                glm::mat3 prev_scale_mat = lib::scaleMatrix<3, float>({ zoom, zoom });
+                glm::mat3 prev_scale_mat_inv = lib::scaleMatrix<3, float>({ 1.f/zoom, 1.f/zoom });
+
                 float ds = 0.05f;
                 float mult = scroll > 0 ? (1.0f / (1.0f + scroll * ds)) : ((-scroll * ds + 1.0f));
                 zoom *= mult;
-                glm::mat3 t_mat = lib::translateMatrix<3, float>(translate);
-                glm::mat3 t_mat_inv = lib::translateMatrix<3, float>(-translate);
-
-                glm::vec2 new_zoom_t = mouse_handler.currentPosition<float>();
-                //new_zoom_t = { 300, 200 };
-                glm::mat3 mouse_T_matrix = lib::translateMatrix<3, float>(-new_zoom_t);
-                glm::mat3 mouse_T_inv_matrix = lib::translateMatrix<3, float>(new_zoom_t);
-
-                glm::mat3 zoom_mat = lib::scaleMatrix<3, float>({ zoom, zoom });
-                glm::mat3 zoom_mat_inv = lib::scaleMatrix<3, float>({ 1.f/zoom, 1.f/zoom });
+                glm::mat3 scale_mat = lib::scaleMatrix<3, float>({ zoom, zoom });
+                glm::mat3 scale_mat_inv = lib::scaleMatrix<3, float>({ 1.f/zoom, 1.f/zoom });
                 
-                zoom_matrix = mouse_T_inv_matrix * zoom_mat * mouse_T_matrix;
-                zoom_t = new_zoom_t;
+                glm::mat3 mult_mat = lib::scaleMatrix<3, float>({ mult, mult});
 
-                glm::vec2 mouse_T_pos = zoom_matrix * glm::vec3(new_zoom_t, 1.f);
+                // in screen space
+                glm::vec2 mouse_pos = mouse_handler.currentPosition<float>();
+
+                glm::mat3 mouse_pos_matrix = lib::translateMatrix<3, float>(mouse_pos + zoom_t);
+                glm::mat3 mouse_T_inv_matrix = lib::translateMatrix<3, float>(-mouse_pos);
+
+                
+                //zoom_matrix =  ( (prev_scale_mat * mult_mat));
+                zoom_matrix = mouse_pos_matrix * ( (prev_scale_mat * mult_mat));
+
+                zoom_t += mouse_pos;
+
                 int i = 0;
             }
 

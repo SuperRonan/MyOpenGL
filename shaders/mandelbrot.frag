@@ -23,7 +23,7 @@ vec3 palette(int it, const int max_it)
 
 void main()
 {
-	vec2 uv = gl_FragCoord.xy;
+	vec2 uv = gl_FragCoord.xy;// - vec2(640.f, 360.f);
 	vec3 fs = u_uv_to_fs * vec3(uv, 1.0f);
 	float x0 = fs.x / fs.z;
 	float y0 = fs.y / fs.z;
