@@ -146,14 +146,17 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClInclude Include="..\src\lib\Camera.h" />
+    <ClInclude Include="..\src\lib\Camera2D.h" />
     <ClInclude Include="..\src\lib\Library.h" />
     <ClInclude Include="..\src\lib\Log.h" />
     <ClInclude Include="..\src\lib\MouseHandler.h" />
     <ClInclude Include="..\src\lib\ProgramDesc.h" />
     <ClInclude Include="..\src\lib\ShaderDesc.h" />
     <ClInclude Include="..\src\lib\ShaderLib.h" />
+    <ClInclude Include="..\src\lib\StreamOperators.h" />
     <ClInclude Include="..\src\lib\Transforms.h" />
     <ClInclude Include="..\src\lib\Vertex.h" />
+    <ClInclude Include="..\src\lib\Vertex2D.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\src\lib\Log.cpp" />

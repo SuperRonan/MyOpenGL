@@ -2,8 +2,6 @@
 
 in vec2 v_uv;
 
-uniform float u_gamma;
-
 uniform mat3 u_uv_to_fs;
 
 layout (origin_upper_left) in vec4 gl_FragCoord;
@@ -23,7 +21,7 @@ vec3 palette(int it, const int max_it)
 
 void main()
 {
-	vec2 uv = gl_FragCoord.xy;// - vec2(640.f, 360.f);
+	vec2 uv = gl_FragCoord.xy;
 	vec3 fs = u_uv_to_fs * vec3(uv, 1.0f);
 	float x0 = fs.x / fs.z;
 	float y0 = fs.y / fs.z;

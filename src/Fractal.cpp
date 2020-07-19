@@ -14,8 +14,10 @@
 #include <glm/gtc/matrix_transform.hpp>
 #include <glm/gtc/matrix_inverse.hpp>
 #include <lib/Camera.h>
+#include <lib/Camera2D.h>
 #include <lib/MouseHandler.h>
 #include <lib/Transforms.h>
+#include <lib/StreamOperators.h>
 
 
 void framebuffer_size_callback(GLFWwindow* window, int width, int height)
@@ -70,7 +72,7 @@ int main()
     glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3);
     glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 3);
     glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
-    int w = 1280, h = 720;
+    int w = 1920, h = 1080;
 
     GLFWwindow* window = createCenteredWindow(w, h, "Fractal go Brrrrrr...");
     if (window == NULL)
@@ -152,10 +154,7 @@ int main()
     glCullFace(GL_BACK);
     double t = glfwGetTime(), dt;
 
-    glm::mat3 zoom_matrix(1.f);
-    glm::vec2 zoom_t(0.f);
-    glm::vec2 translate(0.0f);
-    float zoom = 1.0f;
+    lib::Camera2D<float> camera_2D;
 
     while (!glfwWindowShouldClose(window))
     {
@@ -173,10 +172,7 @@ int main()
         processInput(window, zqsd, reset);
         if (reset)
         {
-            zoom_matrix = glm::mat3(1.f);
-            zoom_t = glm::vec2(0.f);
-            translate = glm::vec2(0.f);
-            zoom = 1.f;
+            camera_2D.reset();
         }
         mouse_handler.update(dt);
 
@@ -200,40 +196,17 @@ int main()
 
             if (mouse_handler.isButtonCurrentlyPressed(GLFW_MOUSE_BUTTON_1))
             {
-                glm::vec2 delta_pos = mouse_handler.deltaPosition<float>();
-                glm::vec3 h_delta = (lib::scaleMatrix<3, float>({ zoom, zoom }) * glm::vec3(delta_pos, 1.0f));
-                translate -= glm::vec2(h_delta.x, h_delta.y);
+                camera_2D.move(mouse_handler.deltaPosition<float>());
             }
             else if (scroll != 0)
             {
-                glm::mat3 prev_scale_mat = lib::scaleMatrix<3, float>({ zoom, zoom });
-                glm::mat3 prev_scale_mat_inv = lib::scaleMatrix<3, float>({ 1.f/zoom, 1.f/zoom });
-
-                float ds = 0.05f;
-                float mult = scroll > 0 ? (1.0f / (1.0f + scroll * ds)) : ((-scroll * ds + 1.0f));
-                zoom *= mult;
-                glm::mat3 scale_mat = lib::scaleMatrix<3, float>({ zoom, zoom });
-                glm::mat3 scale_mat_inv = lib::scaleMatrix<3, float>({ 1.f/zoom, 1.f/zoom });
-                
-                glm::mat3 mult_mat = lib::scaleMatrix<3, float>({ mult, mult});
-
-                // in screen space
-                glm::vec2 mouse_pos = mouse_handler.currentPosition<float>();
-
-                glm::mat3 mouse_pos_matrix = lib::translateMatrix<3, float>(mouse_pos + zoom_t);
-                glm::mat3 mouse_T_inv_matrix = lib::translateMatrix<3, float>(-mouse_pos);
-
-                
-                //zoom_matrix =  ( (prev_scale_mat * mult_mat));
-                zoom_matrix = mouse_pos_matrix * ( (prev_scale_mat * mult_mat));
-
-                zoom_t += mouse_pos;
-
-                int i = 0;
+                glm::vec2 screen_mouse_pos = mouse_handler.currentPosition<float>();
+                camera_2D.zoom(screen_mouse_pos, scroll);
             }
 
-            glm::mat3 mat_uv_to_fs = screen_coords_matrix * lib::translateMatrix<3, float>(translate) * zoom_matrix ;
-
+            glm::mat3 mat_uv_to_fs = screen_coords_matrix * camera_2D.matrix();
+            //glm::mat3 mat_uv_to_fs = camera_2D.matrix();
+            
             glClearColor(0.2, 0.3, 0.3, 1.0);
             glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
