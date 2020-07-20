@@ -26,5 +26,11 @@
     <None Include="..\shaders\mandelbrot.frag">
       <Filter>shaders</Filter>
     </None>
+    <None Include="..\shaders\mandelbrot_double.frag">
+      <Filter>shaders</Filter>
+    </None>
+    <None Include="..\shaders\shader1_double.vert">
+      <Filter>shaders</Filter>
+    </None>
   </ItemGroup>
 </Project>

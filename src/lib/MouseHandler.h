@@ -27,10 +27,16 @@ namespace lib
 		int m_prev_buttons[5];
 		int m_current_buttons[5];
 
+		double m_scroll;
+
 		// in degrees
 		double m_pitch, m_yaw;
 
 		void updatePhiTheta();
+
+		static double s_scroll;
+
+		static void mouse_scroll_callback(GLFWwindow* window, double xoffset, double yoffset);
 
 
 	public:
@@ -74,6 +80,8 @@ namespace lib
 			res.z = std::sin(r_yaw) * std::cos(r_pitch);
 			return res;
 		}
+
+		double getScroll()const;
 
 		bool inWindow()const;
 

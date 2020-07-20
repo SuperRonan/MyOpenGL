@@ -4,6 +4,12 @@
 
 namespace lib
 {
+	double MouseHandler::s_scroll = 0;
+
+	void MouseHandler::mouse_scroll_callback(GLFWwindow* window, double xoffset, double yoffset)
+	{
+		s_scroll = yoffset;
+	}
 
 	void MouseHandler::updatePhiTheta()
 	{
@@ -26,6 +32,7 @@ namespace lib
 		m_pitch(0.0),
 		m_yaw(180.0),
 		m_window(window),
+		m_scroll(0),
 		fov(90),
 		sensibility(sensibility)
 	{
@@ -38,6 +45,8 @@ namespace lib
 			m_current_buttons[i] = GLFW_RELEASE;
 			m_prev_buttons[i] = GLFW_RELEASE;
 		}
+
+		glfwSetScrollCallback(m_window, mouse_scroll_callback);
 	}
 
 	void MouseHandler::update(double dt)
@@ -56,6 +65,9 @@ namespace lib
 		{
 			m_current_buttons[i] = glfwGetMouseButton(m_window, GLFW_MOUSE_BUTTON_1 + i);
 		}
+		
+		m_scroll = s_scroll;
+		s_scroll = 0.0;
 	}
 
 
@@ -98,5 +110,10 @@ namespace lib
 	{
 		assert(id < 5 && id >= 0);
 		return !m_current_buttons[id] && m_prev_buttons[id];
+	}
+
+	double MouseHandler::getScroll()const
+	{
+		return m_scroll;
 	}
 }

@@ -56,42 +56,17 @@ GLFWwindow* createCenteredWindow(int w, int h, const char* name)
 }
 
 
-float scroll = 0.0;
-
-void scroll_callback(GLFWwindow* window, double xoffset, double yoffset)
-{
-    scroll = (float)yoffset;
-}
-
-int main()
+template <class Float>
+int fractal_main(GLFWwindow * window)
 {
     using Vertex = lib::Vertex<float>;
-    using Camera = lib::Camera<float>;
-    int main_res = 0;
-    glfwInit();
-    glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3);
-    glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 3);
-    glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
-    int w = 1920, h = 1080;
+    using Camera = lib::Camera<Float>;
+    using Camera2D = lib::Camera2D<Float>;
 
-    GLFWwindow* window = createCenteredWindow(w, h, "Fractal go Brrrrrr...");
-    if (window == NULL)
-    {
-        std::cerr << "Could not create the window:\n" << std::endl;
-        glfwTerminate();
-        return -1;
-    }
-    glfwMakeContextCurrent(window);
-
-    if (!gladLoadGLLoader((GLADloadproc)glfwGetProcAddress))
-    {
-        std::cerr << "Could not initialize GLAD" << std::endl;
-        glfwTerminate();
-        return -1;
-    }
-    glViewport(0, 0, w, h);
-    glfwSetFramebufferSizeCallback(window, framebuffer_size_callback);
-    lib::MouseHandler mouse_handler(window, lib::MouseHandler::Mode::Position);
+    using Vector2 = glm::vec<2, Float>;
+    using Vector3 = glm::vec<3, Float>;
+    using Matrix3 = glm::mat<3, 3, Float>;
+    using Matrix4 = glm::mat<4, 4, Float>;
 
 
     std::vector<Vertex> vertices = {
@@ -125,9 +100,23 @@ int main()
     glVertexAttribPointer(2, 2, GL_FLOAT, GL_FALSE, Vertex::stride(), (void*)Vertex::uvOffset());
     glEnableVertexAttribArray(2);
 
+
     std::string shader_folder = "../shaders/";
-    lib::ShaderDesc vertex_shader(shader_folder + "shader1.vert", GL_VERTEX_SHADER);
-    lib::ShaderDesc fragment_shader(shader_folder + "mandelbrot.frag", GL_FRAGMENT_SHADER);
+    std::string vertex_shader_file, fragment_shader_file;
+    if constexpr(std::is_same<Float, float>::value)
+    {
+        vertex_shader_file = shader_folder + "shader1.vert";
+        fragment_shader_file = shader_folder + "mandelbrot.frag";
+    }
+    else
+    {
+        static_assert(std::is_same<Float, double>::value, "Float must either be float or double.");
+        vertex_shader_file = shader_folder + "shader1_double.vert";
+        fragment_shader_file = shader_folder + "mandelbrot_double.frag";
+    }
+
+    lib::ShaderDesc vertex_shader(vertex_shader_file, GL_VERTEX_SHADER);
+    lib::ShaderDesc fragment_shader(fragment_shader_file, GL_FRAGMENT_SHADER);
 
     vertex_shader.compile();
     fragment_shader.compile();
@@ -145,20 +134,18 @@ int main()
     program.printUniforms(std::cout);
 
     Camera camera({ 0.0f, 0.0f, 2.0f });
+    lib::MouseHandler mouse_handler(window, lib::MouseHandler::Mode::Position);
 
-    glfwSetScrollCallback(window, scroll_callback);
-    
 
-    glEnable(GL_DEPTH_TEST);
-    glEnable(GL_CULL_FACE);
-    glCullFace(GL_BACK);
+    glDisable(GL_DEPTH_TEST);
+    glDisable(GL_CULL_FACE);
     double t = glfwGetTime(), dt;
 
-    lib::Camera2D<float> camera_2D;
+    Camera2D camera_2D;
+
 
     while (!glfwWindowShouldClose(window))
     {
-        scroll = 0;
         {
             double new_t = glfwGetTime();
             dt = new_t - t;
@@ -178,44 +165,52 @@ int main()
 
         int width, height;
         glfwGetWindowSize(window, &width, &height);
-        float aspect_ratio = float(width) / float(height);
+        Float aspect_ratio = Float(width) / Float(height);
         if (width && height)
         {
             // camera -> screen
             glm::mat4 mat_P;
-            mat_P = glm::perspective(glm::radians(mouse_handler.fov), aspect_ratio, 0.01f, 1000.0f);
+            mat_P = glm::perspective(glm::radians(mouse_handler.fov), float(aspect_ratio), 0.01f, 1000.0f);
             //mat_P = glm::ortho(0.0f, float(w), 0.0f, float(h), 0.01f, 100.0f);
 
             // world to camera
-            const glm::mat4 mat_V = glm::scale(glm::mat4(1.f), { aspect_ratio, 1.f, 1.f });
+            const glm::mat4 mat_V = glm::scale(Matrix4(1.f), { aspect_ratio, 1.f, 1.f });
 
             // model to world
-            const glm::mat4 mat_M = glm::translate(glm::mat4(1.f), { 0.f, 0.f, -1.f });
+            const glm::mat4 mat_M = glm::translate(Matrix4(1.f), { 0.f, 0.f, -1.f });
 
-            glm::mat3 screen_coords_matrix = lib::scaleMatrix<3, float>({ 1.0f / float(height), 1.0f / float(height) });
+            Matrix3 screen_coords_matrix = lib::scaleMatrix<3, Float>({ 1.0f / Float(height), 1.0f / Float(height) });
 
             if (mouse_handler.isButtonCurrentlyPressed(GLFW_MOUSE_BUTTON_1))
             {
-                camera_2D.move(mouse_handler.deltaPosition<float>());
+                camera_2D.move(mouse_handler.deltaPosition<Float>());
             }
-            else if (scroll != 0)
+            else if (mouse_handler.getScroll() != 0)
             {
-                glm::vec2 screen_mouse_pos = mouse_handler.currentPosition<float>();
-                camera_2D.zoom(screen_mouse_pos, scroll);
+                Vector2 screen_mouse_pos = mouse_handler.currentPosition<Float>();
+                camera_2D.zoom(screen_mouse_pos, mouse_handler.getScroll());
             }
 
-            glm::mat3 mat_uv_to_fs = screen_coords_matrix * camera_2D.matrix();
-            //glm::mat3 mat_uv_to_fs = camera_2D.matrix();
+            Matrix3 mat_uv_to_fs = screen_coords_matrix * camera_2D.matrix();
             
-            glClearColor(0.2, 0.3, 0.3, 1.0);
-            glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-
             glBindVertexArray(VAO);
             program.use();
             program.setUniform("u_V", mat_V);
             program.setUniform("u_P", mat_P);
             program.setUniform("u_M", mat_M);
-            program.setUniform("u_uv_to_fs", mat_uv_to_fs);
+            if constexpr (std::is_same<Float, float>::value)
+            {
+                program.setUniform("u_uv_to_fs", mat_uv_to_fs);
+            }
+            else
+            {
+                glm::uvec2 u_scale = glm::unpackDouble2x32(mat_uv_to_fs[0][0]);
+                program.setUniform("u_scale", u_scale);
+                glm::uvec2 u_tx = glm::unpackDouble2x32(mat_uv_to_fs[2][0]);
+                glm::uvec2 u_ty = glm::unpackDouble2x32(mat_uv_to_fs[2][1]);
+                program.setUniform("u_tx", u_tx);
+                program.setUniform("u_ty", u_ty);
+            }
             //glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
             glDrawElements(GL_TRIANGLES, indices.size(), GL_UNSIGNED_INT, 0);
 
@@ -224,6 +219,47 @@ int main()
             lib::ProgramDesc::useNone();
         }
     }
+    return 0;
+}
+
+int main()
+{
+    
+    int main_res = 0;
+    glfwInit();
+    glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3);
+    glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 3);
+    glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
+    int w = 1920, h = 1080;
+
+    GLFWwindow* window = createCenteredWindow(w, h, "Fractal go Brrrrrr...");
+    if (window == NULL)
+    {
+        std::cerr << "Could not create the window:\n" << std::endl;
+        glfwTerminate();
+        return -1;
+    }
+    glfwMakeContextCurrent(window);
+
+    if (!gladLoadGLLoader((GLADloadproc)glfwGetProcAddress))
+    {
+        std::cerr << "Could not initialize GLAD" << std::endl;
+        glfwTerminate();
+        return -1;
+    }
+    if (!gladLoadGL())
+    {
+        std::cout << "Unable to load OpenGL functions!" << std::endl;
+        glfwTerminate();
+        return -1;
+    }
+    glViewport(0, 0, w, h);
+    glfwSetFramebufferSizeCallback(window, framebuffer_size_callback);
+    
+    
+
+    main_res = fractal_main<double>(window);
+    
 
     glfwTerminate();
     return main_res;

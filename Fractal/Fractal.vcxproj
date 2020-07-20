@@ -23,6 +23,8 @@
   </ItemGroup>
   <ItemGroup>
     <None Include="..\shaders\mandelbrot.frag" />
+    <None Include="..\shaders\mandelbrot_double.frag" />
+    <None Include="..\shaders\shader1_double.vert" />
   </ItemGroup>
   <PropertyGroup Label="Globals">
     <VCProjectVersion>16.0</VCProjectVersion>

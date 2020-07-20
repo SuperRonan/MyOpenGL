@@ -5,6 +5,7 @@
 #include <type_traits>
 #include <glm/glm.hpp>
 #include <glm/gtc/type_ptr.hpp>
+#include <iostream>
 
 namespace lib
 {
@@ -69,6 +70,35 @@ namespace lib
 			else if constexpr (std::is_same<glm::mat4x4, T>::value)
 			{
 				glUniformMatrix4fv(u_id, 1, GL_FALSE, glm::value_ptr(value));
+			}
+			else if constexpr (std::is_same<double, T>::value)
+			{
+				glUniform1d(u_id, value);
+			}
+			else if constexpr (std::is_same<glm::vec<2, double>, T>::value)
+			{
+				glUniform2dv(u_id, 1, glm::value_ptr(value));
+			}
+			else if constexpr (std::is_same<glm::vec<3, double>, T>::value)
+			{
+				glUniform3dv(u_id, 1, glm::value_ptr(value));
+			}
+			else if constexpr (std::is_same<glm::vec<4, double>, T>::value)
+			{
+				glUniform4dv(u_id, 1, glm::value_ptr(value));
+			}
+			else if constexpr (std::is_same<glm::mat<3, 3, double>, T>::value)
+			{
+				std::cout << glUniformMatrix3dv << std::endl;
+				glUniformMatrix3dv(u_id, 1, GL_FALSE, glm::value_ptr(value));
+			}
+			else if constexpr (std::is_same<glm::mat<4, 4, double>, T>::value)
+			{
+				glUniformMatrix4dv(u_id, 1, GL_FALSE, glm::value_ptr(value));
+			}
+			else if constexpr (std::is_same<glm::uvec2, T>::value)
+			{
+				glUniform2uiv(u_id, 1, glm::value_ptr(value));
 			}
 			else
 			{

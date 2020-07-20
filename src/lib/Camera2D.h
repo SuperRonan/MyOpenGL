@@ -20,7 +20,7 @@ namespace lib
 
 		Vector2 m_translate;
 
-		float m_zoom;
+		Float m_zoom;
 
 		//Screen space to camera window
 		Matrix3 m_zoom_matrix;
