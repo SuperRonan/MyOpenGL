@@ -198,19 +198,9 @@ int fractal_main(GLFWwindow * window)
             program.setUniform("u_V", mat_V);
             program.setUniform("u_P", mat_P);
             program.setUniform("u_M", mat_M);
-            if constexpr (std::is_same<Float, float>::value)
-            {
-                program.setUniform("u_uv_to_fs", mat_uv_to_fs);
-            }
-            else
-            {
-                glm::uvec2 u_scale = glm::unpackDouble2x32(mat_uv_to_fs[0][0]);
-                program.setUniform("u_scale", u_scale);
-                glm::uvec2 u_tx = glm::unpackDouble2x32(mat_uv_to_fs[2][0]);
-                glm::uvec2 u_ty = glm::unpackDouble2x32(mat_uv_to_fs[2][1]);
-                program.setUniform("u_tx", u_tx);
-                program.setUniform("u_ty", u_ty);
-            }
+            
+            program.setUniform("u_uv_to_fs", mat_uv_to_fs);
+            
             //glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
             glDrawElements(GL_TRIANGLES, indices.size(), GL_UNSIGNED_INT, 0);
 
@@ -227,8 +217,8 @@ int main()
     
     int main_res = 0;
     glfwInit();
-    glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3);
-    glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 3);
+    glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 4);
+    glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 6);
     glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
     int w = 1920, h = 1080;
 
@@ -255,10 +245,10 @@ int main()
     }
     glViewport(0, 0, w, h);
     glfwSetFramebufferSizeCallback(window, framebuffer_size_callback);
-    
+    std::cout << glGetString(GL_VERSION) << std::endl;
     
 
-    main_res = fractal_main<double>(window);
+    main_res = fractal_main<float>(window);
     
 
     glfwTerminate();

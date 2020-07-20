@@ -89,7 +89,6 @@ namespace lib
 			}
 			else if constexpr (std::is_same<glm::mat<3, 3, double>, T>::value)
 			{
-				std::cout << glUniformMatrix3dv << std::endl;
 				glUniformMatrix3dv(u_id, 1, GL_FALSE, glm::value_ptr(value));
 			}
 			else if constexpr (std::is_same<glm::mat<4, 4, double>, T>::value)

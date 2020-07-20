@@ -1,10 +1,6 @@
 #version 410 core
 
-//uniform dmat3 u_uv_to_fs;
-
-uniform uvec2 u_scale;
-uniform uvec2 u_tx;
-uniform uvec2 u_ty;
+uniform dmat3 u_uv_to_fs;
 
 layout (origin_upper_left) in vec4 gl_FragCoord;
 
@@ -40,11 +36,6 @@ int escape(dvec2 z0, const int max_it)
 
 void main()
 {
-	dmat3 u_uv_to_fs = dmat3(1.0);
-	u_uv_to_fs[0][0] = packDouble2x32(u_scale);
-	u_uv_to_fs[1][1] = packDouble2x32(u_scale);
-	u_uv_to_fs[2][0] = packDouble2x32(u_tx);
-	u_uv_to_fs[2][1] = packDouble2x32(u_ty);
 	dvec2 uv = gl_FragCoord.xy;
 	dvec3 fs = u_uv_to_fs * dvec3(uv, 1.0);
 	dvec2 z0 = fs.xy / fs.z;
