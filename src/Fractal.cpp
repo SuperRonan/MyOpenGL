@@ -26,23 +26,16 @@ void framebuffer_size_callback(GLFWwindow* window, int width, int height)
 }
 
 
-void processInput(GLFWwindow* window, glm::vec3& moving, bool & reset)
+void processInput(GLFWwindow* window, bool & reset, bool & use_double)
 {
     if (glfwGetKey(window, GLFW_KEY_ESCAPE) == GLFW_PRESS)
         glfwSetWindowShouldClose(window, true);
-    moving = glm::vec3(0.0f, 0.0f, 0.0f);
-    if (glfwGetKey(window, GLFW_KEY_W) == GLFW_PRESS)
-        moving.y += 1.0f;
-    if (glfwGetKey(window, GLFW_KEY_S) == GLFW_PRESS)
-        moving.y -= 1.0f;
+
     if (glfwGetKey(window, GLFW_KEY_D) == GLFW_PRESS)
-        moving.x += 1.0f;
-    if (glfwGetKey(window, GLFW_KEY_A) == GLFW_PRESS)
-        moving.x -= 1.0f;
-    if (glfwGetKey(window, GLFW_KEY_SPACE) == GLFW_PRESS)
-        moving.z += 1.0f;
-    if (glfwGetKey(window, GLFW_KEY_LEFT_CONTROL) == GLFW_PRESS)
-        moving.z -= 1.0f;
+        use_double = true;
+    if (glfwGetKey(window, GLFW_KEY_F) == GLFW_PRESS)
+        use_double = false;
+
     reset = glfwGetKey(window, GLFW_KEY_R) == GLFW_PRESS;
 }
 
@@ -56,17 +49,17 @@ GLFWwindow* createCenteredWindow(int w, int h, const char* name)
 }
 
 
-template <class Float>
 int fractal_main(GLFWwindow * window)
 {
+    bool use_double = false;
     using Vertex = lib::Vertex<float>;
-    using Camera = lib::Camera<Float>;
-    using Camera2D = lib::Camera2D<Float>;
+    using Camera = lib::Camera<double>;
+    using Camera2D = lib::Camera2D<double>;
 
-    using Vector2 = glm::vec<2, Float>;
-    using Vector3 = glm::vec<3, Float>;
-    using Matrix3 = glm::mat<3, 3, Float>;
-    using Matrix4 = glm::mat<4, 4, Float>;
+    using Vector2 = glm::vec<2, double>;
+    using Vector3 = glm::vec<3, double>;
+    using Matrix3 = glm::mat<3, 3, double>;
+    using Matrix4 = glm::mat<4, 4, double>;
 
 
     std::vector<Vertex> vertices = {
@@ -102,36 +95,43 @@ int fractal_main(GLFWwindow * window)
 
 
     std::string shader_folder = "../shaders/";
-    std::string vertex_shader_file, fragment_shader_file;
-    if constexpr(std::is_same<Float, float>::value)
-    {
-        vertex_shader_file = shader_folder + "shader1.vert";
-        fragment_shader_file = shader_folder + "mandelbrot.frag";
-    }
-    else
-    {
-        static_assert(std::is_same<Float, double>::value, "Float must either be float or double.");
-        vertex_shader_file = shader_folder + "shader1_double.vert";
-        fragment_shader_file = shader_folder + "mandelbrot_double.frag";
-    }
+    std::string vertex_shader_file, double_vertex_shader_file, fragment_shader_file, double_fragment_shader_file;
+    
+    vertex_shader_file = shader_folder + "shader1.vert";
+    fragment_shader_file = shader_folder + "mandelbrot.frag";
+    
+    double_vertex_shader_file = shader_folder + "shader1_double.vert";
+    double_fragment_shader_file = shader_folder + "mandelbrot_double.frag";
+    
 
     lib::ShaderDesc vertex_shader(vertex_shader_file, GL_VERTEX_SHADER);
+    lib::ShaderDesc vertex_shader_double(double_vertex_shader_file, GL_VERTEX_SHADER);
     lib::ShaderDesc fragment_shader(fragment_shader_file, GL_FRAGMENT_SHADER);
+    lib::ShaderDesc fragment_shader_double(double_fragment_shader_file, GL_FRAGMENT_SHADER);
 
     vertex_shader.compile();
+    vertex_shader_double.compile();
     fragment_shader.compile();
-
+    fragment_shader_double.compile();
+    
     assert(vertex_shader.isCompiled());
+    assert(vertex_shader_double.isCompiled());
     assert(fragment_shader.isCompiled());
+    assert(fragment_shader_double.isCompiled());
 
-    lib::ProgramDesc program(&vertex_shader, &fragment_shader);
-    program.link();
+    lib::ProgramDesc program_float(&vertex_shader, &fragment_shader);
+    lib::ProgramDesc program_double(&vertex_shader_double, &fragment_shader_double);
+    program_float.link();
+    program_double.link();
 
-    assert(program.isLinked());
+    assert(program_float.isLinked());
+    assert(program_double.isLinked());
 
     std::cout << "Fractal shader1: \n";
-    program.printAttributes(std::cout);
-    program.printUniforms(std::cout);
+    program_float.printAttributes(std::cout);
+    program_float.printUniforms(std::cout);
+    program_double.printAttributes(std::cout);
+    program_double.printUniforms(std::cout);
 
     Camera camera({ 0.0f, 0.0f, 2.0f });
     lib::MouseHandler mouse_handler(window, lib::MouseHandler::Mode::Position);
@@ -156,7 +156,7 @@ int fractal_main(GLFWwindow * window)
 
         glm::vec3 zqsd;
         bool reset;
-        processInput(window, zqsd, reset);
+        processInput(window, reset, use_double);
         if (reset)
         {
             camera_2D.reset();
@@ -165,7 +165,7 @@ int fractal_main(GLFWwindow * window)
 
         int width, height;
         glfwGetWindowSize(window, &width, &height);
-        Float aspect_ratio = Float(width) / Float(height);
+        double aspect_ratio = double(width) / double(height);
         if (width && height)
         {
             // camera -> screen
@@ -179,28 +179,36 @@ int fractal_main(GLFWwindow * window)
             // model to world
             const glm::mat4 mat_M = glm::translate(Matrix4(1.f), { 0.f, 0.f, -1.f });
 
-            Matrix3 screen_coords_matrix = lib::scaleMatrix<3, Float>({ 1.0f / Float(height), 1.0f / Float(height) });
+            Matrix3 screen_coords_matrix = lib::scaleMatrix<3, double>({ 1.0 / double(height), 1.0 / double(height) });
 
             if (mouse_handler.isButtonCurrentlyPressed(GLFW_MOUSE_BUTTON_1))
             {
-                camera_2D.move(mouse_handler.deltaPosition<Float>());
+                camera_2D.move(mouse_handler.deltaPosition<double>());
             }
             else if (mouse_handler.getScroll() != 0)
             {
-                Vector2 screen_mouse_pos = mouse_handler.currentPosition<Float>();
+                Vector2 screen_mouse_pos = mouse_handler.currentPosition<double>();
                 camera_2D.zoom(screen_mouse_pos, mouse_handler.getScroll());
             }
 
             Matrix3 mat_uv_to_fs = screen_coords_matrix * camera_2D.matrix();
             
+            lib::ProgramDesc* program = use_double ? &program_double : &program_float;
+
             glBindVertexArray(VAO);
-            program.use();
-            program.setUniform("u_V", mat_V);
-            program.setUniform("u_P", mat_P);
-            program.setUniform("u_M", mat_M);
+            program->use();
+            program->setUniform("u_V", mat_V);
+            program->setUniform("u_P", mat_P);
+            program->setUniform("u_M", mat_M);
             
-            program.setUniform("u_uv_to_fs", mat_uv_to_fs);
-            
+            if (use_double)
+            {
+                program_double.setUniform("u_uv_to_fs", mat_uv_to_fs);
+            }
+            else
+            {
+                program_float.setUniform("u_uv_to_fs", glm::mat3(mat_uv_to_fs));
+            }
             //glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
             glDrawElements(GL_TRIANGLES, indices.size(), GL_UNSIGNED_INT, 0);
 
@@ -245,10 +253,11 @@ int main()
     }
     glViewport(0, 0, w, h);
     glfwSetFramebufferSizeCallback(window, framebuffer_size_callback);
-    std::cout << glGetString(GL_VERSION) << std::endl;
-    
 
-    main_res = fractal_main<float>(window);
+    std::cout << glGetString(GL_VERSION) << std::endl;
+    std::cout << glGetString(GL_RENDERER) << std::endl;
+
+    main_res = fractal_main(window);
     
 
     glfwTerminate();

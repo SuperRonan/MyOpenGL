@@ -1,8 +1,9 @@
-#version 330 core
+#version 430 core
 
 uniform mat3 u_uv_to_fs;
 
 layout (origin_upper_left) in vec4 gl_FragCoord;
+;
 
 out vec4 o_color;
 
