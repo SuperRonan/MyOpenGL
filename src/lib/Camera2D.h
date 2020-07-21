@@ -12,9 +12,9 @@ namespace lib
 
 		// Screen space: something like [0, 1[ x [0, 1[ (not centered in zero)
 
-		using Vector2 = glm::vec<2, Float>;
-		using Vector3 = glm::vec<3, Float>;
-		using Matrix3 = glm::mat<3, 3, Float>;
+		using Vector2 = Vector2<Float>;
+		using Vector3 = Vector3<Float>;
+		using Matrix3 = Matrix3<Float>;
 
 		float m_ds = 0.1f;
 

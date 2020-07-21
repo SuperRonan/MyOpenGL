@@ -19,6 +19,7 @@
 #include <lib/Transforms.h>
 #include <lib/StreamOperators.h>
 
+#include <lib/Math.h>
 
 void framebuffer_size_callback(GLFWwindow* window, int width, int height)
 {
@@ -65,11 +66,10 @@ int fractal_main(GLFWwindow * window)
     using Camera = lib::Camera<double>;
     using Camera2D = lib::Camera2D<double>;
 
-    using Vector2 = glm::vec<2, double>;
-    using Vector3 = glm::vec<3, double>;
-    using Matrix3 = glm::mat<3, 3, double>;
-    using Matrix4 = glm::mat<4, 4, double>;
-
+    using Vector2 = lib::Vector2d;
+    using Vector3 = lib::Vector3d;
+    using Matrix3 = lib::Matrix3x3d;
+    using Matrix4 = lib::Matrix4x4d;
 
     std::vector<Vertex> vertices = {
         {{1.f,  1.f, 0.0f}, {0.0f, 0.0f, 1.0f}, {1.0f, 0.0f}},  // top right
@@ -179,15 +179,13 @@ int fractal_main(GLFWwindow * window)
         if (width && height)
         {
             // camera -> screen
-            glm::mat4 mat_P;
-            mat_P = glm::perspective(glm::radians(mouse_handler.fov), float(aspect_ratio), 0.01f, 1000.0f);
-            //mat_P = glm::ortho(0.0f, float(w), 0.0f, float(h), 0.01f, 100.0f);
-
+            const lib::Matrix4x4f mat_P = glm::perspective(glm::radians(mouse_handler.fov), float(aspect_ratio), 0.01f, 1000.0f);
+            
             // world to camera
-            const glm::mat4 mat_V = glm::scale(Matrix4(1.f), { aspect_ratio, 1.f, 1.f });
+            const lib::Matrix4x4f mat_V = glm::scale(lib::Matrix4x4f(1.f), { aspect_ratio, 1.f, 1.f });
 
             // model to world
-            const glm::mat4 mat_M = glm::translate(Matrix4(1.f), { 0.f, 0.f, -1.f });
+            const lib::Matrix4x4f mat_M = glm::translate(lib::Matrix4x4f(1.f), { 0.f, 0.f, -1.f });
 
             Matrix3 screen_coords_matrix = lib::scaleMatrix<3, double>({ 1.0 / double(height), 1.0 / double(height) });
 
@@ -217,7 +215,7 @@ int fractal_main(GLFWwindow * window)
             }
             else
             {
-                program_float.setUniform("u_uv_to_fs", glm::mat3(mat_uv_to_fs));
+                program_float.setUniform("u_uv_to_fs", lib::Matrix3x3f(mat_uv_to_fs));
             }
             //glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
             glDrawElements(GL_TRIANGLES, indices.size(), GL_UNSIGNED_INT, 0);

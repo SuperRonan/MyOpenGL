@@ -1,6 +1,6 @@
 #pragma once
 
-#include <glm/glm.hpp>
+#include "Math.h"
 
 namespace lib
 {
@@ -8,10 +8,8 @@ namespace lib
 	class Vertex2D
 	{
 	public:
-		
-		using Vector2 = glm::vec<2, Float>;
 
-		Vector2 m_position;
+		Vector2<Float> m_position;
 
 
 	public:

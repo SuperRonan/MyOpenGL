@@ -1,9 +1,9 @@
 #pragma once
 
-#include <glm/glm.hpp>
+#include "Math.h"
 
 template <int N, class T, class Out>
-Out& operator<<(Out& out, glm::vec<N, T> const& vec)
+Out& operator<<(Out& out, lib::Vector<N, T> const& vec)
 {
 	out << "[";
 	for (int i = 0; i < N - 1; ++i)
@@ -15,7 +15,7 @@ Out& operator<<(Out& out, glm::vec<N, T> const& vec)
 }
 
 template <int R, int C, class T, class Out>
-Out& operator<<(Out& out, glm::mat<C, R, T> const& mat)
+Out& operator<<(Out& out, lib::Matrix<R, C, T> const& mat)
 {
 	for (int j = 0; j < R ; ++j) // |
 	{

@@ -1,14 +1,14 @@
 #pragma once
 
-#include <glm/glm.hpp>
+#include "Math.h"
 #include <glm/gtc/matrix_transform.hpp>
 
 namespace lib
 {
 	template <int N, class Float>
-	glm::mat<N, N, Float> scaleMatrix(glm::vec<N-1, Float> const& vector)
+	MatrixN<N, Float> scaleMatrix(Vector<N-1, Float> const& vector)
 	{
-		glm::mat<N, N, Float> res(Float(1.0));
+		MatrixN<N, Float> res(Float(1.0));
 		for (int i = 0; i < N-1; ++i)
 		{
 			res[i][i] = vector[i];
@@ -17,9 +17,9 @@ namespace lib
 	}
 
 	template <int N, class Float>
-	glm::mat<N, N, Float> translateMatrix(glm::vec<N - 1, Float> const& vector)
+	MatrixN<N, Float> translateMatrix(Vector<N - 1, Float> const& vector)
 	{
-		glm::mat<N, N, Float> res(Float(1.0));
+		MatrixN<N, Float> res(Float(1.0));
 		for (int i = 0; i < N - 1; ++i)
 		{
 			res[N-1][i] = vector[i];
@@ -28,9 +28,9 @@ namespace lib
 	}
 
 	template <int N, class Float>
-	glm::mat<N, N, Float> inverseTranslateMatrix(glm::vec<N - 1, Float> const& vector)
+	MatrixN<N, Float> inverseTranslateMatrix(Vector<N - 1, Float> const& vector)
 	{
-		glm::mat<N, N, Float> res(Float(1.0));
+		MatrixN<N, Float> res(Float(1.0));
 		for (int i = 0; i < N - 1; ++i)
 		{
 			res[N - 1][i] = -vector[i];
@@ -39,9 +39,9 @@ namespace lib
 	}
 
 	template <int N, class Float>
-	glm::mat<N, N, Float> inverseTranslateMatrix(glm::mat<N, N, Float> const& t_mat)
+	MatrixN<N, Float> inverseTranslateMatrix(MatrixN<N, Float> const& t_mat)
 	{
-		glm::mat<N, N, Float> res(Float(1.0));
+		MatrixN<N, Float> res(Float(1.0));
 		for (int i = 0; i < N - 1; ++i)
 		{
 			res[N - 1][i] = -t_mat[N-1][i];
@@ -50,15 +50,15 @@ namespace lib
 	}
 
 	template <int N, class Float>
-	glm::vec<N + 1, Float> homogenize(glm::vec<N, Float> const& vec, Float h=Float(1.0))
+	Vector<N + 1, Float> homogenize(Vector<N, Float> const& vec, Float h=Float(1.0))
 	{
-		return glm::vec<N + 1, Float>(vec, h);
+		return Vector<N + 1, Float>(vec, h);
 	}
 
 	template <int N, class Float>
-	glm::vec<N, Float> deHomogenize(glm::vec<N + 1, Float> const& h_vec)
+	glm::vec<N, Float> deHomogenize(Vector<N + 1, Float> const& h_vec)
 	{
-		glm::vec<N, Float> res;
+		Vector<N, Float> res;
 		if (h_vec[N] != 0)
 		{
 			for (int i = 0; i < N; ++i)

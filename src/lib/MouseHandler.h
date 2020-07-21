@@ -1,6 +1,6 @@
 #pragma once
 
-#include <glm/glm.hpp>
+#include"Math.h"
 #include <GLFW/glfw3.h>
 
 namespace lib
@@ -14,10 +14,6 @@ namespace lib
 	protected:
 
 		Mode m_mode;
-
-		using Vector2d = glm::vec < 2, double>;
-		using Vector2f = glm::vec < 2, float>;
-
 
 		Vector2d m_prev_pos, m_current_pos;
 		Vector2d m_delta;
@@ -55,7 +51,7 @@ namespace lib
 		template <class Float>
 		Vector2d currentPosition()const
 		{
-			glm::vec<2, Float> res;
+			Vector2<Float> res;
 			res.x = m_current_pos.x;
 			res.y = m_current_pos.y;
 			return res;
@@ -64,16 +60,16 @@ namespace lib
 		template <class Float>
 		Vector2d deltaPosition()const
 		{
-			glm::vec<2, Float> res;
+			Vector2<Float> res;
 			res.x = m_delta.x;
 			res.y = m_delta.y;
 			return res;
 		}
 
 		template <class Float>
-		glm::vec<3, Float> direction()const
+		Vector3<Float> direction()const
 		{
-			glm::vec<3, Float> res;
+			Vector3<Float> res;
 			double r_yaw = glm::radians(m_yaw), r_pitch = -glm::radians(m_pitch);
 			res.x = std::cos(r_yaw) * std::cos(r_pitch);
 			res.y = std::sin(r_pitch);
