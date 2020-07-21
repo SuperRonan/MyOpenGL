@@ -26,7 +26,7 @@ void framebuffer_size_callback(GLFWwindow* window, int width, int height)
 }
 
 
-void processInput(GLFWwindow* window, bool & reset, bool & use_double)
+void processInput(GLFWwindow* window, bool & reset, bool & use_double, int & max_it)
 {
     if (glfwGetKey(window, GLFW_KEY_ESCAPE) == GLFW_PRESS)
         glfwSetWindowShouldClose(window, true);
@@ -35,7 +35,16 @@ void processInput(GLFWwindow* window, bool & reset, bool & use_double)
         use_double = true;
     if (glfwGetKey(window, GLFW_KEY_F) == GLFW_PRESS)
         use_double = false;
-
+    if (glfwGetKey(window, GLFW_KEY_KP_ADD) == GLFW_PRESS)
+    {
+        ++max_it;
+        std::cout << "max it: " << max_it << std::endl;
+    }
+    if (glfwGetKey(window, GLFW_KEY_KP_SUBTRACT) == GLFW_PRESS)
+    {
+        --max_it;
+        std::cout << "max it: " << max_it << std::endl;
+    }
     reset = glfwGetKey(window, GLFW_KEY_R) == GLFW_PRESS;
 }
 
@@ -140,9 +149,10 @@ int fractal_main(GLFWwindow * window)
     glDisable(GL_DEPTH_TEST);
     glDisable(GL_CULL_FACE);
     double t = glfwGetTime(), dt;
-
+    
     Camera2D camera_2D;
 
+    int u_max_it = 500;
 
     while (!glfwWindowShouldClose(window))
     {
@@ -156,7 +166,7 @@ int fractal_main(GLFWwindow * window)
 
         glm::vec3 zqsd;
         bool reset;
-        processInput(window, reset, use_double);
+        processInput(window, reset, use_double, u_max_it);
         if (reset)
         {
             camera_2D.reset();
@@ -200,7 +210,7 @@ int fractal_main(GLFWwindow * window)
             program->setUniform("u_V", mat_V);
             program->setUniform("u_P", mat_P);
             program->setUniform("u_M", mat_M);
-            
+            program->setUniform("u_max_it", u_max_it);
             if (use_double)
             {
                 program_double.setUniform("u_uv_to_fs", mat_uv_to_fs);

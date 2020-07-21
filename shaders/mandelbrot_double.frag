@@ -2,6 +2,8 @@
 
 uniform dmat3 u_uv_to_fs;
 
+uniform int u_max_it;
+
 layout (origin_upper_left) in vec4 gl_FragCoord;
 
 out vec4 o_color;
@@ -40,9 +42,7 @@ void main()
 	dvec3 fs = u_uv_to_fs * dvec3(uv, 1.0);
 	dvec2 z0 = fs.xy / fs.z;
 	
-	const int max_it = 500;
+	int it = escape(z0, u_max_it);
 
-	int it = escape(z0, max_it);
-
-	o_color = vec4(palette(it, max_it), 1.0f);
+	o_color = vec4(palette(it, u_max_it), 1.0f);
 }
