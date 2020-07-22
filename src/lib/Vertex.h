@@ -5,7 +5,7 @@
 namespace lib
 {
 	template <class Float>
-	class Vertex
+	struct Vertex
 	{
 	public:
 
@@ -25,24 +25,24 @@ namespace lib
 		Vertex(Vertex const& other) = default;
 
 
-		static int stride()
+		static constexpr int stride()
 		{
 			return sizeof(Vertex);
 		}
 
-		static int positionOffset()
+		static constexpr int positionOffset()
 		{
-			return 0;
+			return offsetof(Vertex, m_position);
 		}
 
-		static int normalOffset()
+		static constexpr int normalOffset()
 		{
-			return sizeof(m_position);
+			return offsetof(Vertex, m_normal);
 		}
 
-		static int uvOffset()
+		static constexpr int uvOffset()
 		{
-			return sizeof(m_position) + sizeof(m_normal);
+			return offsetof(Vertex, m_uv);
 		}
 	};
 }

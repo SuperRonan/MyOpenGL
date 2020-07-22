@@ -15,6 +15,7 @@
 #include <glm/gtc/matrix_inverse.hpp>
 #include <lib/Camera.h>
 #include <lib/MouseHandler.h>
+#include <lib/Mesh.h>
 
 
 void framebuffer_size_callback(GLFWwindow* window, int width, int height)
@@ -117,6 +118,11 @@ int main()
 {
     using Vertex = lib::Vertex<float>;
     using Camera = lib::Camera<float>;
+    using Mesh = lib::Mesh<float>;
+
+    using Matrix4 = lib::Matrix4f;
+    using Vector3 = lib::Vector3f;
+
     int main_res = 0;
     glfwInit();
     glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3);
@@ -156,27 +162,12 @@ int main()
     };
 
     makeCube(vertices, indices);
+
+    Mesh cube;
+
+    cube.set(vertices, indices);
+    cube.setup();
     
-    GLuint VAO; glGenVertexArrays(1, &VAO);
-    GLuint VBO; glGenBuffers(1, &VBO);
-    GLuint EBO; glGenBuffers(1, &EBO);
-
-
-    glBindVertexArray(VAO);
-    
-    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, EBO);
-    glBufferData(GL_ELEMENT_ARRAY_BUFFER, indices.size() * sizeof(unsigned int), indices.data(), GL_STATIC_DRAW);
-
-    glBindBuffer(GL_ARRAY_BUFFER, VBO);
-    glBufferData(GL_ARRAY_BUFFER, vertices.size() * sizeof(decltype(vertices)::value_type), vertices.data(), GL_STATIC_DRAW);
-
-    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, Vertex::stride(), (void*)Vertex::positionOffset());
-    glEnableVertexAttribArray(0);
-    glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, Vertex::stride(), (void*)Vertex::normalOffset());
-    glEnableVertexAttribArray(1);
-    glVertexAttribPointer(2, 2, GL_FLOAT, GL_FALSE, Vertex::stride(), (void*)Vertex::uvOffset());
-    glEnableVertexAttribArray(2);
-
     std::string shader_folder = "../shaders/";
     lib::ShaderDesc vertex_shader(shader_folder + "shader1.vert", GL_VERTEX_SHADER);
     lib::ShaderDesc fragment_shader(shader_folder + "shader1.frag", GL_FRAGMENT_SHADER);
@@ -199,21 +190,21 @@ int main()
     Camera camera({ 0.0f, 0.0f, 2.0f });
 
     // camera -> screen
-    glm::mat4 mat_P = glm::perspective(glm::radians(mouse_handler.fov), float(w) / float(h), 0.01f, 1000.0f);
+    Matrix4 mat_P = glm::perspective(glm::radians(mouse_handler.fov), float(w) / float(h), 0.01f, 1000.0f);
     //glm::mat4 mat_P = glm::ortho(0.0f, float(w), 0.0f, float(h), 0.01f, 100.0f);
     
     // world to camera
-    glm::mat4 mat_V;
+    Matrix4 mat_V;
 
     // model to world
-    std::vector<glm::mat4> model_matrices;
+    std::vector<Matrix4> model_matrices;
     int N_cubes = 100;
     for (int i = 0; i <= N_cubes; ++i)
     {
         for (int j = 0; j <= N_cubes; ++j)
         {
-            glm::vec3 t_vector(i-N_cubes/2, -1.0f, j-N_cubes/2);
-            model_matrices.push_back(glm::translate(glm::mat4(1.0f), t_vector) * glm::scale(glm::mat4(1.0f), { 0.5, 0.5, 0.5 }));
+            Vector3 t_vector(i-N_cubes/2, -1.0f, j-N_cubes/2);
+            model_matrices.push_back(glm::translate(Matrix4(1.0f), t_vector) * glm::scale(Matrix4(1.0f), { 0.5, 0.5, 0.5 }));
             //model_matrices.push_back(glm::scale(glm::mat4(1.0f), { 0.5, 0.5, 0.5 }) * glm::translate(glm::mat4(1.0f), t_vector));
         }
     }
@@ -237,7 +228,7 @@ int main()
 
         processInput(window, zqsd, mouse_handler.fov);
         mouse_handler.update(dt);
-        mouse_handler.print(std::cout);
+        //mouse_handler.print(std::cout);
         {
             const float cam_speed = 3.f;
             camera.move(zqsd * float(dt) * cam_speed);
@@ -248,8 +239,7 @@ int main()
         
         camera.setDirection(mouse_handler.direction<float>());
         mat_V = camera.getMatrix();
-
-        glBindVertexArray(VAO);
+        
         program.use();
         program.setUniform("u_V", mat_V);
         program.setUniform("u_P", mat_P);
@@ -259,10 +249,9 @@ int main()
         {
             program.setUniform("u_M", glm::rotate(mat_M, glm::radians(float(t)), {1.0f, 0.0f, 0.0f}));
             //glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
-            glDrawElements(GL_TRIANGLES, indices.size(), GL_UNSIGNED_INT, 0);
+            cube.draw();
         }
 
-        glBindVertexArray(0);
         lib::ProgramDesc::useNone();
     }
 
