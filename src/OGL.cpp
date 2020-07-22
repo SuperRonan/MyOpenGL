@@ -237,6 +237,7 @@ int main()
 
         processInput(window, zqsd, mouse_handler.fov);
         mouse_handler.update(dt);
+        mouse_handler.print(std::cout);
         {
             const float cam_speed = 3.f;
             camera.move(zqsd * float(dt) * cam_speed);

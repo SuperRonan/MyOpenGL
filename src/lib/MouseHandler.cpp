@@ -38,8 +38,17 @@ namespace lib
 	{
 		int w, h;
 		glfwGetWindowSize(window, &w, &h);
-		glfwSetCursorPos(window, double(w)/2.0, double(h)/2.0);
-		setMode(m_mode);
+		
+		if (m_mode == Mode::Direction)
+		{
+			glfwSetInputMode(m_window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
+			glfwSetCursorPos(window, 0.0, 0.0);
+		}
+		else if (m_mode == Mode::Position)
+		{
+			glfwSetInputMode(m_window, GLFW_CURSOR, GLFW_CURSOR_NORMAL);
+			glfwSetCursorPos(window, double(w) / 2.0, double(h) / 2.0);
+		}
 		for (int i = 0; i < 5; ++i)
 		{
 			m_current_buttons[i] = GLFW_RELEASE;
@@ -56,6 +65,7 @@ namespace lib
 		m_delta = m_current_pos - m_prev_pos;
 		if (m_mode == Mode::Direction)
 		{
+			m_delta = m_current_pos;
 			m_prev_pos = { 0.0, 0.0 };
 			glfwSetCursorPos(m_window, 0.0, 0.0);
 			updatePhiTheta();
