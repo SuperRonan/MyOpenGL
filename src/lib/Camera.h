@@ -16,6 +16,10 @@ namespace lib
 		Vector3<Float> m_up;
 		Vector3<Float> m_right;
 
+		Float m_fov = 90;
+		Float m_aspect = 16.0 / 9.0;
+		Vector2<Float> m_clip = { 0.01, 1000 };
+
 		__forceinline void updateRight()
 		{
 			m_right = glm::normalize(glm::cross(m_front, m_up));
@@ -32,9 +36,14 @@ namespace lib
 		
 		Camera(Camera const& other) = default;
 
-		Matrix4<Float> getMatrix()const
+		Matrix4<Float> getMatrixM()const
 		{
 			return glm::lookAt(m_position, m_position + m_front, m_up);
+		}
+
+		Matrix4<Float> getMatrixP()const
+		{
+			return glm::perspective<Float>(glm::radians(m_fov), m_aspect, m_clip[0], m_clip[1]);
 		}
 
 		void setTarget(Vector3<Float> const& target)

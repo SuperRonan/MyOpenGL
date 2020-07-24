@@ -33,9 +33,6 @@
     <ClInclude Include="..\src\lib\ShaderDesc.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="..\src\lib\ShaderLib.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
     <ClInclude Include="..\src\lib\Vertex.h">
       <Filter>Header Files</Filter>
     </ClInclude>
@@ -57,6 +54,9 @@
     <ClInclude Include="..\src\lib\Mesh.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="..\src\lib\Scene.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\src\lib\Log.cpp">
@@ -69,9 +69,6 @@
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="..\src\lib\ShaderDesc.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="..\src\lib\ShaderLib.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>

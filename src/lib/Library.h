@@ -1,6 +1,7 @@
 #pragma once
 
 #include <vector>
+#include <memory>
 
 namespace lib
 {
@@ -9,7 +10,9 @@ namespace lib
 	{
 	protected:
 
-		std::vector<T> m_elements;
+		using SPT = std::shared_ptr<T>;
+		
+		std::vector<SPT> m_elements;
 
 	public:
 
@@ -20,21 +23,23 @@ namespace lib
 
 		Library(Library&&) = delete;
 
-		T const& operator[](int i)const
+		SPT const& operator[](int i)const
 		{
 			return m_elements[i];
 		}
 
-		T & operator[](int i)
+		SPT & operator[](int i)
 		{
 			return m_elements[i];
 		}
 
 		int add(T&& element)
 		{
-			m_elements.emplace_back(std::move(element));
-			return m_elements.size
+			m_elements.emplace_back(std::make_shared<T>(element));
+			return m_elements.size();
 		}
+
+
 
 		
 	};

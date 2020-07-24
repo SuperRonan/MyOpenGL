@@ -153,8 +153,8 @@
     <ClInclude Include="..\src\lib\Mesh.h" />
     <ClInclude Include="..\src\lib\MouseHandler.h" />
     <ClInclude Include="..\src\lib\ProgramDesc.h" />
+    <ClInclude Include="..\src\lib\Scene.h" />
     <ClInclude Include="..\src\lib\ShaderDesc.h" />
-    <ClInclude Include="..\src\lib\ShaderLib.h" />
     <ClInclude Include="..\src\lib\StreamOperators.h" />
     <ClInclude Include="..\src\lib\Transforms.h" />
     <ClInclude Include="..\src\lib\Vertex.h" />
@@ -165,7 +165,6 @@
     <ClCompile Include="..\src\lib\MouseHandler.cpp" />
     <ClCompile Include="..\src\lib\ProgramDesc.cpp" />
     <ClCompile Include="..\src\lib\ShaderDesc.cpp" />
-    <ClCompile Include="..\src\lib\ShaderLib.cpp" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

@@ -16,7 +16,7 @@
 #include <lib/Camera.h>
 #include <lib/MouseHandler.h>
 #include <lib/Mesh.h>
-
+#include <lib/Scene.h>
 
 void framebuffer_size_callback(GLFWwindow* window, int width, int height)
 {
@@ -119,14 +119,15 @@ int main()
     using Vertex = lib::Vertex<float>;
     using Camera = lib::Camera<float>;
     using Mesh = lib::Mesh<float>;
+    using Scene = lib::Scene<float>;
 
     using Matrix4 = lib::Matrix4f;
     using Vector3 = lib::Vector3f;
 
     int main_res = 0;
     glfwInit();
-    glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3);
-    glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 3);
+    glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 4);
+    glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 6);
     glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
     int w = 1920, h = 1080;
     
@@ -167,6 +168,9 @@ int main()
 
     cube.set(vertices, indices);
     cube.setup();
+
+    Scene scene;
+
     
     std::string shader_folder = "../shaders/";
     lib::ShaderDesc vertex_shader(shader_folder + "shader1.vert", GL_VERTEX_SHADER);
@@ -187,12 +191,9 @@ int main()
     program.printAttributes(std::cout);
     program.printUniforms(std::cout);
 
-    Camera camera({ 0.0f, 0.0f, 2.0f });
+    Scene::Object obj = { std::make_shared<Mesh>(std::move(cube)), std::make_shared<lib::ProgramDesc>(std::move(program)) };
+    scene.base.m_objects.push_back(std::make_shared<Scene::Object>(std::move(obj)));
 
-    // camera -> screen
-    Matrix4 mat_P = glm::perspective(glm::radians(mouse_handler.fov), float(w) / float(h), 0.01f, 1000.0f);
-    //glm::mat4 mat_P = glm::ortho(0.0f, float(w), 0.0f, float(h), 0.01f, 100.0f);
-    
     // world to camera
     Matrix4 mat_V;
 
@@ -231,26 +232,15 @@ int main()
         //mouse_handler.print(std::cout);
         {
             const float cam_speed = 3.f;
-            camera.move(zqsd * float(dt) * cam_speed);
+            scene.m_camera.move(zqsd * float(dt) * cam_speed);
         }
         glClearColor(0.2, 0.3, 0.3, 1.0);
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
         
-        camera.setDirection(mouse_handler.direction<float>());
-        mat_V = camera.getMatrix();
-        
-        program.use();
-        program.setUniform("u_V", mat_V);
-        program.setUniform("u_P", mat_P);
-        program.setUniform("u_color", glm::vec3(1.0f, 0.0f, 1.0f));
-        
-        for (glm::mat4& mat_M : model_matrices)
-        {
-            program.setUniform("u_M", glm::rotate(mat_M, glm::radians(float(t)), {1.0f, 0.0f, 0.0f}));
-            //glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
-            cube.draw();
-        }
+        scene.m_camera.setDirection(mouse_handler.direction<float>());
+
+        scene.draw();
 
         lib::ProgramDesc::useNone();
     }

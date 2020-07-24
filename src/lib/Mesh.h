@@ -4,6 +4,7 @@
 #include <vector>
 #include <string>
 #include <glad/glad.h>
+#include <type_traits>
 
 namespace lib
 {
@@ -14,32 +15,71 @@ namespace lib
 
 		using Vertex = Vertex<Float>;
 		
-		GLuint m_VAO, m_VBO, m_EBO;
+		GLuint m_VAO = 0, m_VBO = 0, m_EBO = 0;
 
 		std::vector<Vertex> m_vertices;
 		std::vector<GLuint> m_indices;
 
+		GLuint m_number_of_elements = 0;
 
+		bool m_host_is_loaded = false;
+
+		static constexpr GLenum GL_Float()
+		{
+			if constexpr (std::is_same<Float, float>::value)
+				return GL_FLOAT;
+			else
+				return GL_DOUBLE;
+		}
 
 	public:
 
-		Mesh() :
-			m_VAO(0),
-			m_VBO(0),
-			m_EBO(0)
-		{}
+		Mesh(){}
+
+		Mesh(Mesh&& other) = default;
+
+		Mesh(Mesh const& other) = delete;
+
+		~Mesh()
+		{
+			if (m_VAO)
+			{
+				glDeleteVertexArrays(1, &m_VAO);
+				glDeleteBuffers(2, &m_VBO); // and also EBO
+			}
+		}
 
 		void set(std::vector<Vertex> const& vertices, std::vector<GLuint> const& indices)
 		{
 			m_vertices = vertices;
 			m_indices = indices;
+			m_number_of_elements = indices.size();
+			m_host_is_loaded = true;
+		}
+
+		void set(std::vector<Vertex>&& vertices, std::vector<GLuint>&& indices)
+		{
+			m_vertices = std::move(vertices);
+			m_indices = std::move(indices);
+			m_number_of_elements = indices.size();
+			m_host_is_loaded = true;
+		}
+
+		void clearHost()
+		{
+			m_vertices.clear();
+			m_vertices.shrink_to_fit();
+			m_indices.clear();
+			m_indices.shrink_to_fit();
+			m_host_is_loaded = false;
 		}
 
 		void setup()
 		{
+			assert(m_host_is_loaded);
+
 			glGenVertexArrays(1, &m_VAO);
-			glGenBuffers(1, &m_VBO);
-			glGenBuffers(1, &m_EBO);
+			glGenBuffers(2, &m_VBO); // and also EBO
 
 			glBindVertexArray(m_VAO);
 
@@ -50,13 +90,13 @@ namespace lib
 			glBufferData(GL_ELEMENT_ARRAY_BUFFER, m_indices.size() * sizeof(GLuint), m_indices.data(), GL_STATIC_DRAW);
 
 			glEnableVertexAttribArray(0);
-			glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, Vertex::stride(), (void*)Vertex::positionOffset());
+			glVertexAttribPointer(0, 3, GL_Float(), GL_FALSE, Vertex::stride(), (void*)Vertex::positionOffset());
 
 			glEnableVertexAttribArray(1);
-			glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, Vertex::stride(), (void*)Vertex::normalOffset());
+			glVertexAttribPointer(1, 3, GL_Float(), GL_FALSE, Vertex::stride(), (void*)Vertex::normalOffset());
 
 			glEnableVertexAttribArray(2);
-			glVertexAttribPointer(2, 2, GL_FLOAT, GL_FALSE, Vertex::stride(), (void*)Vertex::uvOffset());
+			glVertexAttribPointer(2, 2, GL_Float(), GL_FALSE, Vertex::stride(), (void*)Vertex::uvOffset());
 
 			glBindVertexArray(0);
 		}
@@ -65,7 +105,7 @@ namespace lib
 		{
 			glBindVertexArray(m_VAO);
 
-			glDrawElements(GL_TRIANGLES, m_indices.size(), GL_UNSIGNED_INT, 0);
+			glDrawElements(GL_TRIANGLES, m_number_of_elements, GL_UNSIGNED_INT, 0);
 
 			bindNone();
 		}
