@@ -52,7 +52,7 @@ namespace lib
 		template <class T>
 		bool setUniform(GLint u_id, T const& value)const
 		{
-			if constexpr (std::is_same<bool, T>::value || std::is_same<int, T>::value)
+			if constexpr (std::is_same<bool, T>::value || std::is_same<GLint, T>::value)
 			{
 				glUniform1i(u_id, (GLint)value);
 			}

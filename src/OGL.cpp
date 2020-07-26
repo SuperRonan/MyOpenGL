@@ -151,17 +151,8 @@ int main()
     lib::MouseHandler mouse_handler(window);
 
 
-    std::vector<Vertex> vertices = {
-        {{0.5f,  0.5f, 0.0f}, {0.0f, 0.0f, 1.0f}, {1.0f, 0.0f}},  // top right
-        {{0.5f, -0.5f, 0.0f}, {0.0f, 0.0f, 1.0f}, {1.0f, 1.0f}},  // bottom right
-        {{-0.5f, -0.5f, 0.0f}, {0.0f, 0.0f, 1.0f}, {0.0f, 1.0f}},  // bottom left
-        {{-0.5f,  0.5f, 0.0f}, {0.0f, 0.0f, 1.0f}, {0.0f, 0.0f}},  // top left 
-    };
-    std::vector<unsigned int> indices = {
-        0, 1, 3,
-        1, 3, 2,
-    };
-
+    std::vector<Vertex> vertices;
+    std::vector<unsigned int> indices;
     makeCube(vertices, indices);
 
     Mesh cube;
@@ -175,21 +166,11 @@ int main()
         std::make_shared <lib::Phong<float>>(lib::Vector3f{1.f, 0.f, 0.f}, lib::Vector4f{0.f, 0.f, 0.f, 0.f}) };
     scene.base.m_objects.push_back(std::make_shared<Scene::Object>(std::move(obj)));
 
-    // world to camera
-    Matrix4 mat_V;
 
-    // model to world
-    std::vector<Matrix4> model_matrices;
-    int N_cubes = 100;
-    for (int i = 0; i <= N_cubes; ++i)
-    {
-        for (int j = 0; j <= N_cubes; ++j)
-        {
-            Vector3 t_vector(i-N_cubes/2, -1.0f, j-N_cubes/2);
-            model_matrices.push_back(glm::translate(Matrix4(1.0f), t_vector) * glm::scale(Matrix4(1.0f), { 0.5, 0.5, 0.5 }));
-            //model_matrices.push_back(glm::scale(glm::mat4(1.0f), { 0.5, 0.5, 0.5 }) * glm::translate(glm::mat4(1.0f), t_vector));
-        }
-    }
+    scene.m_lights[0] = lib::Light<float>::PointLight({2.f, 1.f, 3.f}, Vector3(10));
+    scene.m_lights[1] = lib::Light<float>::PointLight({0.f, 1.f, -3.f}, Vector3(5));
+
+    scene.m_camera.setPosition(scene.m_lights[0].position);
     
     glEnable(GL_DEPTH_TEST);
     glEnable(GL_CULL_FACE);

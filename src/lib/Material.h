@@ -13,11 +13,11 @@ namespace lib
 	{
 	protected:
 
-		std::shared_ptr<ProgramDesc> m_program;
-
 		static std::filesystem::path s_shader_path;
 
 	public:
+
+		std::shared_ptr<ProgramDesc> m_program;
 
 		Material() = default;
 		Material(std::shared_ptr<ProgramDesc> const& program);
@@ -68,6 +68,7 @@ namespace lib
 		{
 			if (!s_phong_shader->isLinked())
 				s_phong_shader->link();
+			s_phong_shader->printUniforms(std::cout);
 		}
 
 

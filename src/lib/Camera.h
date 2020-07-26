@@ -59,6 +59,11 @@ namespace lib
 			updateRight();
 		}
 
+		void setPosition(Vector3<Float> const& pos)
+		{
+			m_position = pos;
+		}
+
 		void move(Vector3<Float> const& movement)
 		{
 			m_position += movement.x * m_right + movement.y * m_front + movement.z * m_up;
