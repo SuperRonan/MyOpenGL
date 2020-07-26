@@ -171,27 +171,8 @@ int main()
 
     Scene scene;
 
-    
-    std::string shader_folder = "../shaders/";
-    lib::ShaderDesc vertex_shader(shader_folder + "shader1.vert", GL_VERTEX_SHADER);
-    lib::ShaderDesc fragment_shader(shader_folder + "shader1.frag", GL_FRAGMENT_SHADER);
-
-    vertex_shader.compile();
-    fragment_shader.compile();
-
-    assert(vertex_shader.isCompiled());
-    assert(fragment_shader.isCompiled());
-
-    lib::ProgramDesc program(&vertex_shader, &fragment_shader);
-    program.link();
-    
-    assert(program.isLinked());
-
-    std::cout << "Program shader1: \n";
-    program.printAttributes(std::cout);
-    program.printUniforms(std::cout);
-
-    Scene::Object obj = { std::make_shared<Mesh>(std::move(cube)), std::make_shared<lib::ProgramDesc>(std::move(program)) };
+    Scene::Object obj = { std::make_shared<Mesh>(std::move(cube)), 
+        std::make_shared <lib::Phong<float>>(lib::Vector3f{1.f, 0.f, 0.f}, lib::Vector4f{0.f, 0.f, 0.f, 0.f}) };
     scene.base.m_objects.push_back(std::make_shared<Scene::Object>(std::move(obj)));
 
     // world to camera

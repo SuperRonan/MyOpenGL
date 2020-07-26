@@ -149,6 +149,7 @@
     <ClInclude Include="..\src\lib\Camera2D.h" />
     <ClInclude Include="..\src\lib\Library.h" />
     <ClInclude Include="..\src\lib\Log.h" />
+    <ClInclude Include="..\src\lib\Material.h" />
     <ClInclude Include="..\src\lib\Math.h" />
     <ClInclude Include="..\src\lib\Mesh.h" />
     <ClInclude Include="..\src\lib\MouseHandler.h" />
@@ -162,9 +163,14 @@
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\src\lib\Log.cpp" />
+    <ClCompile Include="..\src\lib\Material.cpp" />
     <ClCompile Include="..\src\lib\MouseHandler.cpp" />
     <ClCompile Include="..\src\lib\ProgramDesc.cpp" />
     <ClCompile Include="..\src\lib\ShaderDesc.cpp" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="..\shaders\phong.frag" />
+    <None Include="..\shaders\phong.vert" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

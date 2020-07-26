@@ -36,7 +36,7 @@ namespace lib
 		
 		Camera(Camera const& other) = default;
 
-		Matrix4<Float> getMatrixM()const
+		Matrix4<Float> getMatrixV()const
 		{
 			return glm::lookAt(m_position, m_position + m_front, m_up);
 		}

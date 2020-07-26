@@ -5,7 +5,7 @@
 #include "Math.h"
 #include "Mesh.h"
 #include "Camera.h"
-#include "ProgramDesc.h"
+#include "Material.h"
 
 namespace lib
 {
@@ -20,16 +20,16 @@ namespace lib
 		struct Object
 		{
 			std::shared_ptr<Mesh> mesh;
-			std::shared_ptr<ProgramDesc> program;
+			std::shared_ptr<Material> material;
 
-			Object(std::shared_ptr<Mesh>& m, std::shared_ptr<ProgramDesc>& p):
+			Object(std::shared_ptr<Mesh>& m, std::shared_ptr<Material>& mat):
 				mesh(m),
-				program(p)
+				material(mat)
 			{}
 
-			Object(std::shared_ptr<Mesh>&& m, std::shared_ptr<ProgramDesc>&& p) :
+			Object(std::shared_ptr<Mesh>&& m, std::shared_ptr<Material>&& mat) :
 				mesh(m),
-				program(p)
+				material(mat)
 			{}
 		};
 
@@ -75,10 +75,8 @@ namespace lib
 			for (std::shared_ptr<Object>& pobject : node->m_objects)
 			{
 				Object& object = *pobject;
-				object.program->use();
-				object.program->setUniform("u_M", matrix);
-				object.program->setUniform("u_V", m_camera.getMatrixM());
-				object.program->setUniform("u_P", m_camera.getMatrixP());
+				object.material->use();
+				object.material->setMatrices(matrix, m_camera.getMatrixV(), m_camera.getMatrixP());
 
 				object.mesh->draw();
 			}

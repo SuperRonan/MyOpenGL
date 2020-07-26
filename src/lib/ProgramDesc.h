@@ -8,24 +8,32 @@
 #include <iostream>
 #include "Math.h"
 
+#include <memory>
+
 namespace lib
 {
 	class ProgramDesc
 	{
 	protected:
 
-		ShaderDesc* m_vertex_shader;
-		ShaderDesc* m_fragment_shader;
+		using ShaderPtr = std::shared_ptr<ShaderDesc>;
+
+		std::shared_ptr<ShaderDesc> m_vertex_shader;
+		std::shared_ptr<ShaderDesc> m_fragment_shader;
 
 		GLuint m_id;
 
 	public:
 
-		ProgramDesc(ShaderDesc* vertex_shader, ShaderDesc* fragment_shader);
+		ProgramDesc(ShaderPtr & vertex_shader, ShaderPtr & fragment_shader);
+
+		ProgramDesc(ShaderDesc&& vertex_shader, ShaderDesc&& fragment_shader);
 
 		ProgramDesc(ProgramDesc const&) = delete;
 
-		ProgramDesc(ProgramDesc&& other);
+		ProgramDesc(ProgramDesc&& other) noexcept;
+
+		ProgramDesc(std::string const& shader_name);
 
 		~ProgramDesc();
 

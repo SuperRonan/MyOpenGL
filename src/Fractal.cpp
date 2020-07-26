@@ -128,8 +128,8 @@ int fractal_main(GLFWwindow * window)
     assert(fragment_shader.isCompiled());
     assert(fragment_shader_double.isCompiled());
 
-    lib::ProgramDesc program_float(&vertex_shader, &fragment_shader);
-    lib::ProgramDesc program_double(&vertex_shader_double, &fragment_shader_double);
+    lib::ProgramDesc program_float(std::move(vertex_shader), std::move(fragment_shader));
+    lib::ProgramDesc program_double(std::move(vertex_shader_double), std::move(fragment_shader_double));
     program_float.link();
     program_double.link();
 
