@@ -46,6 +46,11 @@ namespace lib
 			return glm::perspective<Float>(glm::radians(m_fov), m_aspect, m_clip[0], m_clip[1]);
 		}
 
+		Vector3<Float> getPosition()const
+		{
+			return m_position;
+		}
+
 		void setTarget(Vector3<Float> const& target)
 		{
 			m_front = glm::normalize(target - m_position);

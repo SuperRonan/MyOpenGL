@@ -211,7 +211,7 @@ int main()
     Scene scene;
 
     Scene::Object obj = { std::make_shared<Mesh>(std::move(cube)), 
-        std::make_shared <lib::Phong<float>>(lib::Vector3f{1.f, 0.f, 0.f}, lib::Vector4f{0.f, 0.f, 0.f, 0.f}) };
+        std::make_shared <lib::Phong<float>>(lib::Vector3f{1.f, 0.f, 0.f}, lib::Vector4f{1.f, 1.f, 1.f, 100.f}) };
     scene.base.m_objects.push_back(std::make_shared<Scene::Object>(std::move(obj)));
 
 

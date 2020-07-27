@@ -80,7 +80,7 @@ namespace lib
 				Object& object = *pobject;
 				object.material->use();
 				object.material->setMatrices(matrix, m_camera.getMatrixV(), m_camera.getMatrixP());
-				setLights(m_lights, *object.material->m_program.get());
+				setLighting(m_lights, *object.material->m_program.get());
 				object.mesh->draw();
 			}
 			Matrix4 next = node->transform * matrix;
@@ -91,25 +91,25 @@ namespace lib
 		}
 
 		// assumes the program is already being used
-		void setLights(std::vector<Light> const& lights, ProgramDesc& program)
+		void setLighting(std::vector<Light> const& lights, ProgramDesc& program)
 		{
+			GLchar type_name[] = "u_lights[i].type";
+			GLchar position_name[] = "u_lights[i].position";
+			GLchar Le_name[] = "u_lights[i].Le";
 			for (int i = 0; i < lights.size(); ++i)
 			{
-				GLchar type_name[] = "u_lights[i].type";
+				assert(i <= 9);
 				type_name[9] = '0' + i;
-				GLchar position_name[] = "u_lights[i].position";
 				position_name[9] = '0' + i;
-				GLchar Le_name[] = "u_lights[i].Le";
 				Le_name[9] = '0' + i;
 
-				GLint type_location = glGetUniformLocation(program.id(), type_name);
-				GLint position_location = glGetUniformLocation(program.id(), position_name);
-				GLint Le_location = glGetUniformLocation(program.id(), Le_name);
-
-				program.setUniform(type_location, (GLint)lights[i].type);
-				program.setUniform(position_location, lights[i].position);
-				program.setUniform(Le_location, lights[i].Le);
+				program.setUniform(type_name, (GLint)lights[i].type);
+				program.setUniform(position_name, lights[i].position);
+				program.setUniform(Le_name, lights[i].Le);
 			}
+
+			Vector3<Float> cam_pos = m_camera.getPosition();
+			program.setUniform("u_w_camera_position", cam_pos);
 		}
 
 	};

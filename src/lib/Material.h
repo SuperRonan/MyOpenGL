@@ -77,6 +77,7 @@ namespace lib
 		{
 			Material::use();
 			m_program->setUniform("u_diffuse", m_diffuse);
+			m_program->setUniform("u_glossy", m_glossy);
 		}
 	};
 }
