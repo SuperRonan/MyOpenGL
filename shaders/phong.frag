@@ -27,7 +27,7 @@ void main()
 	vec3 res = vec3(0.f, 0.f, 0.f);
 	vec3 w_normal = normalize(v_w_normal);
 	vec3 w_wo = normalize(u_w_camera_position - v_w_position);
-	vec3 w_rwo = reflect(w_wo, w_normal);
+	vec3 w_rwo = reflect(-w_wo, w_normal);
 	int i=0;
 	while(i<MAX_LIGHTS)
 	{

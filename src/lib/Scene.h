@@ -81,11 +81,14 @@ namespace lib
 				object.material->use();
 				object.material->setMatrices(matrix, m_camera.getMatrixV(), m_camera.getMatrixP());
 				setLighting(m_lights, *object.material->m_program.get());
+
+				//glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
+
 				object.mesh->draw();
 			}
-			Matrix4 next = node->transform * matrix;
 			for (std::shared_ptr<Node>& son : node->m_sons)
 			{
+				Matrix4 next = matrix * son->transform;
 				draw(next, son.get());
 			}
 		}

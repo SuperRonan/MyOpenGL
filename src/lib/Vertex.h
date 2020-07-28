@@ -16,6 +16,8 @@ namespace lib
 
 	public:
 
+		Vertex() = default;
+
 		Vertex(Vector3<Float> const& position, Vector3<Float> const& normal, Vector2<Float> const& uv) :
 			m_position(position),
 			m_normal(normal),

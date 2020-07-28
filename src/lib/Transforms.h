@@ -17,6 +17,17 @@ namespace lib
 	}
 
 	template <int N, class Float>
+	MatrixN<N, Float> scaleMatrix(Float s)
+	{
+		MatrixN<N, Float> res(Float(1.0));
+		for (int i = 0; i < N - 1; ++i)
+		{
+			res[i][i] = s;
+		}
+		return res;
+	}
+
+	template <int N, class Float>
 	MatrixN<N, Float> translateMatrix(Vector<N - 1, Float> const& vector)
 	{
 		MatrixN<N, Float> res(Float(1.0));

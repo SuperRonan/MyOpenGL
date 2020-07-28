@@ -61,7 +61,7 @@ namespace lib
 		
 	public:
 
-		Phong(Vector3 const& diffuse, Vector4 const& glossy) :
+		Phong(Vector3 const& diffuse, Vector4 const& glossy = Vector4{0, 0, 0, 1}) :
 			Material(s_phong_shader),
 			m_diffuse(diffuse),
 			m_glossy(glossy)

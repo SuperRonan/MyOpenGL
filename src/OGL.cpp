@@ -17,119 +17,12 @@
 #include <lib/MouseHandler.h>
 #include <lib/Mesh.h>
 #include <lib/Scene.h>
+#include <lib/Shapes.h>
+#include <lib/Transforms.h>
 
 void framebuffer_size_callback(GLFWwindow* window, int width, int height)
 {
     glViewport(0, 0, width, height);
-}
-
-/// <summary>
-/// Fills the vertices and indices arrays to make a cube, centered on 0, of size 1
-/// </summary>
-template <class Float>
-void makeCube(std::vector<lib::Vertex<Float>>& vertices, std::vector<GLuint>& indices, bool use_s_normals=false)
-{
-    //        (0,0)                      (h,0)    
-    //          x0------------------------x1
-    //         /|                        /|
-    //        / |                       / |
-    //       /  |                      /  |
-    //      /   |                     /   |
-    //(0,h)x3------------------------x2   | (h,h)
-    //     |    |        +y          |    |
-    //     |    |        ^           |    |
-    //     |    |        |           |    |
-    //     |    |        |           |    |
-    //     |    | (h,0)  0--->+x     |    |
-    //     |    x4------/------------|----x5 (1,h)  
-    //     |   /       /             |   / 
-    //     |  /       +z             |  /  
-    //     | /                       | /   
-    //     |/                        |/    
-    //(h,h)x7------------------------x6 (1,1)
-
-    const Float h = Float(0.5);
-    const Float t = Float(1) / Float(3);
-    const Float tt = Float(2) / Float(3);
-
-    
-
-    if (use_s_normals)
-    {
-        const auto makeVertex = [](Float x, Float y, Float z, Float u, Float v)
-        {return lib::Vertex<Float>({ x, y, z }, { x, y, z }, { u, v }); };
-
-        // half
-        vertices = {
-            makeVertex(-h, h, -h, 0, 0), // x0
-            makeVertex(h, h, -h, h, 0), // x1
-            makeVertex(h, h, h, h, h), // x2
-            makeVertex(-h, h, h, 0, h), // x3
-            makeVertex(-h, -h, -h, h, 0), // x4
-            makeVertex(h, -h, -h, 1, h), // x5
-            makeVertex(h, -h, h, 1, 1), // x6
-            makeVertex(-h, -h, h, h, h), // x7
-        };
-
-        indices.resize(0);
-        const auto addFace = [&indices](GLuint v0, GLuint v1, GLuint v2, GLuint v3)
-        {
-            indices.push_back(v0);
-            indices.push_back(v1);
-            indices.push_back(v2);
-
-            indices.push_back(v2);
-            indices.push_back(v3);
-            indices.push_back(v0);
-        };
-
-        addFace(0, 3, 2, 1); // up (+y)
-        addFace(0, 1, 5, 4); // back (-z)
-        addFace(0, 4, 7, 3); // left (-x)
-        addFace(6, 7, 4, 5); // bottom (-y)
-        addFace(6, 2, 3, 7); // front (+z)
-        addFace(6, 5, 1, 2); // right (+x)
-    }
-    else
-    {
-        lib::Vector3<Float> X(1, 0, 0), Y(0, 1, 0), Z(0, 0, 1);
-        const auto sign = [](Float f) {return f > 0 ? Float(1) : (f < 0 ? Float(-1) : Float(0)); };
-        const auto addVertexes = [&](Float x, Float y, Float z, Float u, Float v)
-        {
-            vertices.emplace_back(lib::Vector3<Float>{x, y, z}, sign(x) * X, lib::Vector2<Float>{u, v});
-            vertices.emplace_back(lib::Vector3<Float>{x, y, z}, sign(y) * Y, lib::Vector2<Float>{u, v});
-            vertices.emplace_back(lib::Vector3<Float>{x, y, z}, sign(z) * Z, lib::Vector2<Float>{u, v});
-        };
-        vertices.clear();
-
-        addVertexes(-h, h, -h, 0, 0); // x0
-        addVertexes(h, h, -h, h, 0); // x1
-        addVertexes(h, h, h, h, h); // x2
-        addVertexes(-h, h, h, 0, h); // x3
-        addVertexes(-h, -h, -h, h, 0); // x4
-        addVertexes(h, -h, -h, 1, h); // x5
-        addVertexes(h, -h, h, 1, 1); // x6
-        addVertexes(-h, -h, h, h, h); // x7
-
-        const auto id = [](GLuint xi, GLuint axis) {return xi * 3 + axis; };
-        
-        const auto addFace = [&](GLuint v0, GLuint v1, GLuint v2, GLuint v3, GLuint axis)
-        {
-            indices.push_back(id(v0, axis));
-            indices.push_back(id(v1, axis));
-            indices.push_back(id(v2, axis));
-
-            indices.push_back(id(v2, axis));
-            indices.push_back(id(v3, axis));
-            indices.push_back(id(v0, axis));
-        };
-        addFace(0, 3, 2, 1, 1); // up (+y)
-        addFace(0, 1, 5, 4, 2); // back (-z)
-        addFace(0, 4, 7, 3, 0); // left (-x)
-        addFace(6, 7, 4, 5, 1); // bottom (-y)
-        addFace(6, 2, 3, 7, 2); // front (+z)
-        addFace(6, 5, 1, 2, 0); // right (+x)
-    }
 }
 
 void processInput(GLFWwindow* window, glm::vec3 & moving, float & fov)
@@ -199,26 +92,44 @@ int main()
     lib::MouseHandler mouse_handler(window);
 
 
-    std::vector<Vertex> vertices;
-    std::vector<unsigned int> indices;
-    makeCube(vertices, indices, false);
+    std::shared_ptr<lib::Material> phong = 
+        std::make_shared<lib::Phong<float>>(lib::Vector3f{ 0.8f, 0.4f, 0.1f }, lib::Vector4f{ 1.f, 1.f, 1.f, 100.f });
+    std::shared_ptr<lib::Material> emissive =
+        std::make_shared<lib::Phong<float>>(lib::Vector3f{ 0.f, 0.f, 0.f });
 
-    Mesh cube;
+    
+    lib::Shape<float, GLuint> cylinder = cylinder.Cylinder(1.0, 1.0, 20, true, true);
+    lib::Shape<float, GLuint> cube_shape = cube_shape.Cube();
 
-    cube.set(vertices, indices);
-    cube.setup();
+    std::shared_ptr<Mesh> mesh = std::make_shared<Mesh>(cylinder);
+    std::shared_ptr<Mesh> cube = std::make_shared<Mesh>(cube_shape);
+    
+    mesh->setup();
+    mesh->clearHost();
+
+    cube->setup();
+    cube->clearHost();
 
     Scene scene;
 
-    Scene::Object obj = { std::make_shared<Mesh>(std::move(cube)), 
-        std::make_shared <lib::Phong<float>>(lib::Vector3f{1.f, 0.f, 0.f}, lib::Vector4f{1.f, 1.f, 1.f, 100.f}) };
+    Scene::Object obj = { mesh, phong};
     scene.base.m_objects.push_back(std::make_shared<Scene::Object>(std::move(obj)));
+
+    Scene::Node node1 = lib::translateMatrix<4, float>(Vector3{ 2.f, 1.f, 3.f }) * lib::scaleMatrix<4, float>(0.2);
+    Scene::Node node2 = lib::translateMatrix<4, float>(Vector3{ 0.f, 1.f, -3.f }) * lib::scaleMatrix<4, float>(0.2);
+
+    node1.m_objects.push_back(std::make_shared<Scene::Object>(cube, emissive));
+    node2.m_objects.push_back(std::make_shared<Scene::Object>(cube, emissive));
+
+    scene.base.m_sons.push_back(std::make_shared<Scene::Node>(std::move(node1)));
+    scene.base.m_sons.push_back(std::make_shared<Scene::Node>(std::move(node2)));
 
 
     scene.m_lights[0] = lib::Light<float>::PointLight({2.f, 1.f, 3.f}, Vector3(10));
     scene.m_lights[1] = lib::Light<float>::PointLight({0.f, 1.f, -3.f}, Vector3(5));
 
-    scene.m_camera.setPosition(scene.m_lights[0].position);
+
+    //scene.m_camera.setPosition(scene.m_lights[0].position);
     
     glEnable(GL_DEPTH_TEST);
     glEnable(GL_CULL_FACE);

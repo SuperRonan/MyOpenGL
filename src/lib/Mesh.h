@@ -5,6 +5,7 @@
 #include <string>
 #include <glad/glad.h>
 #include <type_traits>
+#include "Shapes.h"
 
 namespace lib
 {
@@ -14,6 +15,8 @@ namespace lib
 	protected:
 
 		using Vertex = Vertex<Float>;
+
+		using Shape = Shape<Float, GLuint>;
 		
 		GLuint m_VAO = 0, m_VBO = 0, m_EBO = 0;
 
@@ -40,6 +43,16 @@ namespace lib
 
 		Mesh(Mesh const& other) = delete;
 
+		Mesh(Shape const& shape)
+		{
+			set(shape);
+		}
+
+		Mesh(Shape && shape)
+		{
+			set(std::move(shape));
+		}
+
 		~Mesh()
 		{
 			if (m_VAO)
@@ -48,6 +61,17 @@ namespace lib
 				glDeleteBuffers(2, &m_VBO); // and also EBO
 			}
 		}
+
+		void set(Shape const& shape)
+		{
+			set(shape.m_vertices, shape.m_indices);
+		}
+
+		void set(Shape && shape)
+		{
+			set(std::move(shape.m_vertices), std::move(shape.m_indices));
+		}
+
 
 		void set(std::vector<Vertex> const& vertices, std::vector<GLuint> const& indices)
 		{
@@ -61,7 +85,7 @@ namespace lib
 		{
 			m_vertices = std::move(vertices);
 			m_indices = std::move(indices);
-			m_number_of_elements = indices.size();
+			m_number_of_elements = m_indices.size();
 			m_host_is_loaded = true;
 		}
 
