@@ -154,6 +154,7 @@
     <ClInclude Include="..\src\lib\Mesh.h" />
     <ClInclude Include="..\src\lib\Lights.h" />
     <ClInclude Include="..\src\lib\MouseHandler.h" />
+    <ClInclude Include="..\src\lib\Node.h" />
     <ClInclude Include="..\src\lib\ProgramDesc.h" />
     <ClInclude Include="..\src\lib\Scene.h" />
     <ClInclude Include="..\src\lib\ShaderDesc.h" />

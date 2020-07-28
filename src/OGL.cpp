@@ -61,6 +61,8 @@ int main()
     using Camera = lib::Camera<float>;
     using Mesh = lib::Mesh<float>;
     using Scene = lib::Scene<float>;
+    using Node = lib::Node<float>;
+    using Drawable = lib::Drawable<float>;
 
     using Matrix4 = lib::Matrix4f;
     using Vector3 = lib::Vector3f;
@@ -112,17 +114,20 @@ int main()
 
     Scene scene;
 
-    Scene::Object obj = { mesh, phong};
-    scene.base.m_objects.push_back(std::make_shared<Scene::Object>(std::move(obj)));
+    Drawable obj = { mesh, phong};
+    scene.base.addDrawable(std::move(obj));
 
-    Scene::Node node1 = lib::translateMatrix<4, float>(Vector3{ 2.f, 1.f, 3.f }) * lib::scaleMatrix<4, float>(0.2);
-    Scene::Node node2 = lib::translateMatrix<4, float>(Vector3{ 0.f, 1.f, -3.f }) * lib::scaleMatrix<4, float>(0.2);
+    std::shared_ptr<Node> cube_node = std::make_shared<Node>(lib::scaleMatrix<4, float>(0.2));
+    cube_node->emplaceDrawable(cube, emissive);
 
-    node1.m_objects.push_back(std::make_shared<Scene::Object>(cube, emissive));
-    node2.m_objects.push_back(std::make_shared<Scene::Object>(cube, emissive));
+    Node node1 = lib::translateMatrix<4, float>(Vector3{ 2.f, 1.f, 3.f });
+    Node node2 = lib::translateMatrix<4, float>(Vector3{ 0.f, 1.f, -3.f });
 
-    scene.base.m_sons.push_back(std::make_shared<Scene::Node>(std::move(node1)));
-    scene.base.m_sons.push_back(std::make_shared<Scene::Node>(std::move(node2)));
+    node1.sons.push_back(cube_node);
+    node2.sons.push_back(cube_node);
+    
+    scene.base.sons.push_back(std::make_shared<Scene::Node>(std::move(node1)));
+    scene.base.sons.push_back(std::make_shared<Scene::Node>(std::move(node2)));
 
 
     scene.m_lights[0] = lib::Light<float>::PointLight({2.f, 1.f, 3.f}, Vector3(10));

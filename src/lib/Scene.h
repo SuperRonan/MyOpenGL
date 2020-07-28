@@ -7,6 +7,7 @@
 #include "Camera.h"
 #include "Material.h"
 #include "Lights.h"
+#include "Node.h"
 
 namespace lib
 {
@@ -18,35 +19,8 @@ namespace lib
 		using Matrix4 = Matrix4<Float>;
 		using Mesh = Mesh<Float>;
 		using Light = Light<Float>;
-
-		struct Object
-		{
-			std::shared_ptr<Mesh> mesh;
-			std::shared_ptr<Material> material;
-
-			Object(std::shared_ptr<Mesh>& m, std::shared_ptr<Material>& mat):
-				mesh(m),
-				material(mat)
-			{}
-
-			Object(std::shared_ptr<Mesh>&& m, std::shared_ptr<Material>&& mat) :
-				mesh(m),
-				material(mat)
-			{}
-		};
-
-		struct Node
-		{
-			Matrix4 transform;
-			
-			std::vector<std::shared_ptr<Node>> m_sons;
-
-			std::vector<std::shared_ptr<Object>> m_objects;
-
-			Node(Matrix4 transform = Matrix4(Float(1))):
-				transform(transform)
-			{}
-		};
+		using Node = Node<Float>;
+		using Drawable = Drawable<Float>;
 
 		Node base;
 		
@@ -75,18 +49,17 @@ namespace lib
 
 		void draw(Matrix4 const& matrix, Node* node)
 		{
-			for (std::shared_ptr<Object>& pobject : node->m_objects)
+			for (Drawable& d : node->drawable)
 			{
-				Object& object = *pobject;
-				object.material->use();
-				object.material->setMatrices(matrix, m_camera.getMatrixV(), m_camera.getMatrixP());
-				setLighting(m_lights, *object.material->m_program.get());
+				d.material->use();
+				d.material->setMatrices(matrix, m_camera.getMatrixV(), m_camera.getMatrixP());
+				setLighting(m_lights, *d.material->m_program.get());
 
 				//glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
 
-				object.mesh->draw();
+				d.mesh->draw();
 			}
-			for (std::shared_ptr<Node>& son : node->m_sons)
+			for (std::shared_ptr<Node>& son : node->sons)
 			{
 				Matrix4 next = matrix * son->transform;
 				draw(next, son.get());
