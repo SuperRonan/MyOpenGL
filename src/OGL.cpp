@@ -93,49 +93,63 @@ int main()
     glfwSetFramebufferSizeCallback(window, framebuffer_size_callback);
     lib::MouseHandler mouse_handler(window);
 
-
-    std::shared_ptr<lib::Material> phong = 
-        std::make_shared<lib::Phong<float>>(lib::Vector3f{ 0.8f, 0.4f, 0.1f }, lib::Vector4f{ 1.f, 1.f, 1.f, 100.f });
-    std::shared_ptr<lib::Material> emissive =
-        std::make_shared<lib::Phong<float>>(lib::Vector3f{ 0.f, 0.f, 0.f });
-
-    
-    lib::Shape<float, GLuint> cylinder = cylinder.Cylinder(1.0, 1.0, 20, true, true);
-    lib::Shape<float, GLuint> cube_shape = cube_shape.Cube();
-
-    std::shared_ptr<Mesh> mesh = std::make_shared<Mesh>(cylinder);
-    std::shared_ptr<Mesh> cube = std::make_shared<Mesh>(cube_shape);
-    
-    mesh->setup();
-    mesh->clearHost();
-
-    cube->setup();
-    cube->clearHost();
-
     Scene scene;
-
-    Drawable obj = { mesh, phong};
-    scene.base.addDrawable(std::move(obj));
-
-    std::shared_ptr<Node> cube_node = std::make_shared<Node>(lib::scaleMatrix<4, float>(0.2));
-    cube_node->emplaceDrawable(cube, emissive);
-
-    Node node1 = lib::translateMatrix<4, float>(Vector3{ 2.f, 1.f, 3.f });
-    Node node2 = lib::translateMatrix<4, float>(Vector3{ 0.f, 1.f, -3.f });
-
-    node1.sons.push_back(cube_node);
-    node2.sons.push_back(cube_node);
-    
-    scene.base.sons.push_back(std::make_shared<Scene::Node>(std::move(node1)));
-    scene.base.sons.push_back(std::make_shared<Scene::Node>(std::move(node2)));
+    {
+        std::shared_ptr<lib::Material> phong =
+            std::make_shared<lib::Phong<float>>(lib::Vector3f{ 0.8f, 0.4f, 0.1f }, lib::Vector4f{ 1.f, 1.f, 1.f, 100.f });
+        std::shared_ptr<lib::Material> emissive =
+            std::make_shared<lib::Phong<float>>(lib::Vector3f(0), lib::Vector4f(0, 0, 0, 1), lib::Vector3f(1));
 
 
-    scene.m_lights[0] = lib::Light<float>::PointLight({2.f, 1.f, 3.f}, Vector3(10));
-    scene.m_lights[1] = lib::Light<float>::PointLight({0.f, 1.f, -3.f}, Vector3(5));
+        lib::Shape<float, GLuint> cylinder = cylinder.Cylinder(1.0, 1.0, 20, true, true);
+        lib::Shape<float, GLuint> cube_shape = cube_shape.Cube();
+
+        std::shared_ptr<Mesh> mesh = std::make_shared<Mesh>(cylinder);
+        std::shared_ptr<Mesh> cube = std::make_shared<Mesh>(cube_shape);
+
+        mesh->setup();
+        mesh->clearHost();
+
+        cube->setup();
+        cube->clearHost();
+
+        scene.base.sons.push_back(std::make_shared <lib::LambdaNode<float>>([](float t, float dt, Matrix4& mat)
+            {
+                float s = std::cos(t) + 1.5;
+                mat = lib::scaleMatrix<4, float>(s);
+            }));
+
+        Node* base = scene.base.sons[0].get();
 
 
-    //scene.m_camera.setPosition(scene.m_lights[0].position);
-    
+
+        Drawable obj = { mesh, phong };
+        base->sons.push_back(std::make_shared<Node>(lib::translateMatrix<4, float>({ 0, -1, 0 }) * lib::scaleMatrix<4, float>({ 2, 0.1, 2 })));
+        base->sons[0]->addDrawable(std::move(obj));
+
+        std::shared_ptr<Node> cube_node = std::make_shared<Node>(lib::scaleMatrix<4, float>(0.2));
+        cube_node->emplaceDrawable(cube, emissive);
+
+        Node node1 = lib::translateMatrix<4, float>(Vector3{ 2.f, 1.f, 3.f });
+        Node node2 = lib::translateMatrix<4, float>(Vector3{ 0.f, 1.f, -3.f });
+
+        node1.sons.push_back(cube_node);
+        node2.sons.push_back(cube_node);
+
+        base->sons.push_back(std::make_shared<Scene::Node>(std::move(node1)));
+        base->sons.push_back(std::make_shared<Scene::Node>(std::move(node2)));
+
+
+        scene.m_lights[0] = lib::Light<float>::PointLight({ 2.f, 1.f, 3.f }, Vector3(10));
+        scene.m_lights[1] = lib::Light<float>::PointLight({ 0.f, 1.f, -3.f }, Vector3(10));
+
+        scene.m_ambiant = { 0.3, 0.3, 0.3 };
+
+        
+
+        //scene.m_camera.setPosition(scene.m_lights[0].position);
+    }
+
     glEnable(GL_DEPTH_TEST);
     glEnable(GL_CULL_FACE);
     glCullFace(GL_BACK);
@@ -160,9 +174,10 @@ int main()
             const float cam_speed = 3.f;
             scene.m_camera.move(zqsd * float(dt) * cam_speed);
         }
-        glClearColor(0.2, 0.3, 0.3, 1.0);
+        glClearColor(scene.m_ambiant[0], scene.m_ambiant[1], scene.m_ambiant[2], 1.0);
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
+        scene.update(t, dt);
         
         scene.m_camera.setDirection(mouse_handler.direction<float>());
 

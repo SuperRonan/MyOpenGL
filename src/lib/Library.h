@@ -1,7 +1,8 @@
 #pragma once
 
-#include <vector>
+#include <unordered_map>
 #include <memory>
+#include <string>
 
 namespace lib
 {
@@ -11,8 +12,8 @@ namespace lib
 	protected:
 
 		using SPT = std::shared_ptr<T>;
-		
-		std::vector<SPT> m_elements;
+		// use a view string or something
+		std::unordered_map<std::string, SPT> m_elements;
 
 	public:
 
@@ -21,26 +22,39 @@ namespace lib
 
 		Library(Library const&) = delete;
 
-		Library(Library&&) = delete;
+		Library(Library&&) = default;
 
-		SPT const& operator[](int i)const
+		SPT const& operator[](std::string const& key)const
 		{
-			return m_elements[i];
+			return m_elements.at(key);
 		}
 
-		SPT & operator[](int i)
+		SPT & operator[](std::string const& key)
 		{
-			return m_elements[i];
+			return m_elements[key];
 		}
 
-		int add(T&& element)
+		SPT& add(std::string const& key, T&& element)
 		{
-			m_elements.emplace_back(std::make_shared<T>(element));
-			return m_elements.size();
+			return m_elements[key] = std::make_shared<T>(element);
 		}
 
+		SPT& add(std::string const& key, SPT elem)
+		{
+			return m_elements[key] = elem;
+		}
 
+		SPT& add(std::string && key, T&& element)
+		{
+			return m_elements[key] = std::make_shared<T>(element);
+		}
 
+		SPT& add(std::string && key, SPT elem)
+		{
+			return m_elements[key] = elem;
+		}
+
+		
 		
 	};
 }

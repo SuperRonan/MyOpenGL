@@ -28,11 +28,14 @@ namespace lib
 
 		std::vector<Light> m_lights;
 
+		Vector3<Float> m_ambiant;
+
 	public:
 
 
-		Scene():
-			m_lights(5, Light::NoneLight())
+		Scene(Vector3<Float> ambiant = { 0, 0, 0 }) :
+			m_lights(5, Light::NoneLight()),
+			m_ambiant(ambiant)
 		{}
 
 		Scene(Scene const&) = delete;
@@ -43,6 +46,12 @@ namespace lib
 		{
 			draw(base.transform, &base);
 			ProgramDesc::useNone();
+		}
+
+		void update(Float t, Float dt)
+		{
+			Node* node = &base;
+			update(node, t, dt);
 		}
 
 	protected:
@@ -86,6 +95,16 @@ namespace lib
 
 			Vector3<Float> cam_pos = m_camera.getPosition();
 			program.setUniform("u_w_camera_position", cam_pos);
+			program.setUniform("u_ambiant", m_ambiant);
+		}
+
+		void update(Node* node, Float t, Float dt)
+		{
+			node->update(t, dt);
+			for (std::shared_ptr<Node>& son : node->sons)
+			{
+				update(son.get(), t, dt);
+			}
 		}
 
 	};

@@ -58,13 +58,16 @@ namespace lib
 		Vector3 m_diffuse;
 		// color + specular
 		Vector4 m_glossy;
+
+		Vector3 m_emissive;
 		
 	public:
 
-		Phong(Vector3 const& diffuse, Vector4 const& glossy = Vector4{0, 0, 0, 1}) :
+		Phong(Vector3 const& diffuse = { 1, 1, 1 }, Vector4 const& glossy = { 0, 0, 0, 1 }, Vector3 const& emissive = { 0, 0, 0 }) :
 			Material(s_phong_shader),
 			m_diffuse(diffuse),
-			m_glossy(glossy)
+			m_glossy(glossy),
+			m_emissive(emissive)
 		{
 			if (!s_phong_shader->isLinked())
 				s_phong_shader->link();
@@ -78,6 +81,7 @@ namespace lib
 			Material::use();
 			m_program->setUniform("u_diffuse", m_diffuse);
 			m_program->setUniform("u_glossy", m_glossy);
+			m_program->setUniform("u_emissive", m_emissive);
 		}
 	};
 }

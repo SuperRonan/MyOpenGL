@@ -158,7 +158,7 @@ namespace lib
 			return res;
 		}
 
-        static Shape Disk(uint N = 20, Vector3 const& center_pos = Vector3{ 0, 0, 0 }, Float radius = 1, bool up = true)
+        static Shape Disk(uint N = 20, Vector3 const& center_pos = Vector3{ 0, 0, 0 }, Float radius = 1, bool up = true, Float shift=0)
         {
             assert(N > 1);
             Shape res;
@@ -167,11 +167,10 @@ namespace lib
             Vertex center = { center_pos, normal, {0.5, 0.5} };
             
             uint center_id = N;
-            
             const Float h = 0.5;
             for (int i = 0; i < N; ++i)
             {
-                Float phi = Float(i) / Float(N) * glm::two_pi<Float>();
+                Float phi = (Float(i) + shift) / Float(N) * glm::two_pi<Float>();
 
                 Vector2 circle_point = { std::cos(phi), std::sin(phi) };
                 Vector3 pos = center.m_position + radius * Vector3{circle_point[0], 0, circle_point[1]};
@@ -189,32 +188,46 @@ namespace lib
             return res;
         }
 
-        static Shape Cylinder(Float r_up = 1.0, Float r_down = 1.0, uint N = 20, bool up_disk=false, bool down_disk = false)
+        static Shape CylinderRing(Float r_up = 1.0, Float r_down = 1.0, uint N = 20, Vector3 center = { 0, 0, 0 }, Float h=0.5, bool shifted=false)
         {
             Shape res;
-            res.reserve(2 * N, 2 * 3 * N);
-            const Float h = 0.5;
-            Vector3 center(0);
-            for (int i = 0; i < N; ++i)
+            res.reserve(2 * N+2, 2 * 3 * N);
+            Float shift = shifted ? 0.5 : 0;
+            for (int i = 0; i < N+1; ++i)
             {
-                Float u = Float(i) / Float(N);
-                Float phi = u * glm::two_pi<Float>();
-                Vector2 circle_point = { std::cos(phi), std::sin(phi) };
+                Float u_up = Float(i) / Float(N);
+                Float u_down = (Float(i) + shift) / Float(N);
+                Float phi_up = u_up * glm::two_pi<Float>();
+                Float phi_down = u_down * glm::two_pi<Float>();
 
-                Vertex up = { center + r_up * Vector3(circle_point[0], h, circle_point[1]), {circle_point[0], 0, circle_point[1]}, {u, 1} };
-                Vertex down = { center + r_down * Vector3(circle_point[0], -h, circle_point[1]), {circle_point[0], 0, circle_point[1]}, {u, 0} };
-            
+                Vector2 circle_point_up = { std::cos(phi_up), std::sin(phi_up) };
+                Vector2 circle_point_down = { std::cos(phi_down), std::sin(phi_down) };
+
+                Vertex up = { center + r_up * Vector3(circle_point_up[0], h, circle_point_up[1]), {circle_point_up[0], 0, circle_point_up[1]}, {u_up, 1} };
+                Vertex down = { center + r_down * Vector3(circle_point_down[0], -h, circle_point_down[1]), {circle_point_down[0], 0, circle_point_down[1]}, {u_down, 0} };
+
                 res.m_vertices.push_back(up);
                 res.m_vertices.push_back(down);
+                
+                if (i < N)
+                {
+                    uint up_id = 2 * i;
+                    uint down_id = 2 * i + 1;
+                    uint next_up = (2 * i + 2);
+                    uint next_down = (2 * i + 3);
 
-                uint up_id = 2 * i;
-                uint down_id = 2 * i + 1;
-                uint next_up = (2 * i + 2) % (2 * N);
-                uint next_down = (2 * i + 3) % (2 * N);
-
-                res.addFace(up_id, next_up, down_id);
-                res.addFace(next_down, down_id, next_up);
+                    res.addFace(up_id, next_up, down_id);
+                    res.addFace(next_down, down_id, next_up);
+                }
             }
+            return res;
+        }
+
+        static Shape Cylinder(Float r_up = 1.0, Float r_down = 1.0, uint N = 20, bool up_disk=false, bool down_disk = false, bool shifted=false)
+        {
+            const Float h = 0.5;
+            Vector3 center(0);
+            Shape res = CylinderRing(r_up, r_down, N, center, h, shifted);
 
             if (up_disk)
             {
@@ -223,7 +236,8 @@ namespace lib
             }
             if (down_disk)
             {
-                Shape disk = Disk(N, center + Vector3{ 0, -h, 0 }, r_down, false);
+                Float shift = shifted ? 0.5 : 0;
+                Shape disk = Disk(N, center + Vector3{ 0, -h, 0 }, r_down, false, shift);
                 res.merge(disk);
             }
 

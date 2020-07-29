@@ -3,6 +3,8 @@ uniform vec3 u_diffuse;
 
 uniform vec4 u_glossy;
 
+uniform vec3 u_emissive;
+
 #define MAX_LIGHTS 5
 
 struct Light
@@ -13,6 +15,8 @@ struct Light
 	vec3 Le;
 };
 
+uniform vec3 u_ambiant;
+
 uniform Light u_lights[MAX_LIGHTS];
 
 uniform vec3 u_w_camera_position;
@@ -20,11 +24,13 @@ uniform vec3 u_w_camera_position;
 in vec3 v_w_position;
 in vec3 v_w_normal;
 
+in vec2 v_uv;
+
 out vec4 o_color;
 
 void main()
 {
-	vec3 res = vec3(0.f, 0.f, 0.f);
+	vec3 res = u_emissive + u_diffuse * u_ambiant;
 	vec3 w_normal = normalize(v_w_normal);
 	vec3 w_wo = normalize(u_w_camera_position - v_w_position);
 	vec3 w_rwo = reflect(-w_wo, w_normal);
@@ -48,5 +54,6 @@ void main()
 		}
 		++i;
 	}
+	//res = vec3(v_uv.x, 0, v_uv.y);
 	o_color = vec4(res, 1.0f);
 }

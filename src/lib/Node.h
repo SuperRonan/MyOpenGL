@@ -2,6 +2,7 @@
 
 #include <memory>
 #include <vector>
+#include <functional>
 
 #include "Mesh.h"
 #include "Math.h"
@@ -68,5 +69,32 @@ namespace lib
 		
 		virtual void update(Float t, Float dt)
 		{}
+	};
+
+	template <class Float>
+	class LambdaNode: public Node<Float>
+	{
+	protected:
+
+		using Matrix4 = Matrix4<Float>;
+
+		std::function<void(Float, Float, Matrix4&)> m_function;
+
+	public:
+
+		template <class Function>
+		LambdaNode(Function const& f) :
+			m_function(f)
+		{}
+
+		template <class Function>
+		LambdaNode(Function && f) :
+			m_function(f)
+		{}
+
+		virtual void update(Float t, Float dt) override
+		{
+			m_function(t, dt, Node<Float>::transform);
+		}
 	};
 }
