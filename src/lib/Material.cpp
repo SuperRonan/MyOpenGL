@@ -8,11 +8,17 @@ namespace lib
 
 	Material::Material(std::shared_ptr<ProgramDesc> const& program):
 		m_program(program)
-	{}
+	{
+		if (!m_program->isLinked())
+			m_program->link();
+	}
 
 	Material::Material(std::shared_ptr<ProgramDesc> && program) :
 		m_program(program)
-	{}
+	{
+		if (!m_program->isLinked())
+			m_program->link();
+	}
 
 	void Material::use()
 	{

@@ -10,7 +10,6 @@ uniform mat4 u_M;
 uniform mat4 u_V;
 uniform mat4 u_P;
 
-out vec2 v_uv;
 out vec3 v_w_position;
 out vec3 v_w_normal;
 
@@ -22,11 +21,10 @@ mat3 normalMatrix(in mat4 transform)
 
 void main()
 {
-	mat4 MVP = u_P * u_V * u_M;
+	//mat4 MVP = u_P * u_V * u_M;
 	vec4 h_pos = vec4(a_position, 1.0f);
-	gl_Position = MVP * h_pos;
+	//gl_Position = MVP * h_pos;
 	
-	v_uv = a_uv;
 	v_w_position = (u_M * h_pos).xyz;
-	v_w_normal = normalMatrix(u_M) * a_normal;
+	v_w_normal = normalize(normalMatrix(u_M) * a_normal);
 }

@@ -1,24 +1,27 @@
 #include <cassert>
 #include <iostream>
-#include <glad/glad.h>
-#include <GLFW/glfw3.h>
 #include <exception>
 #include <vector>
 #include <string>
 #include <type_traits>
+
+#include <glad/glad.h>
+#include <GLFW/glfw3.h>
 #include <glm/glm.hpp>
+#include <glm/gtc/matrix_inverse.hpp>
+#include <glm/gtc/matrix_transform.hpp>
+
 #include <lib/ShaderDesc.h>
 #include <lib/ProgramDesc.h>
 #include <lib/Vertex.h>
 #include <lib/Log.h>
-#include <glm/gtc/matrix_transform.hpp>
-#include <glm/gtc/matrix_inverse.hpp>
 #include <lib/Camera.h>
 #include <lib/MouseHandler.h>
 #include <lib/Mesh.h>
 #include <lib/Scene.h>
 #include <lib/Shapes.h>
 #include <lib/Transforms.h>
+#include <lib/Library.h>
 
 void framebuffer_size_callback(GLFWwindow* window, int width, int height)
 {
@@ -63,6 +66,8 @@ int main()
     using Scene = lib::Scene<float>;
     using Node = lib::Node<float>;
     using Drawable = lib::Drawable<float>;
+    using ProgramLibrary = lib::Library<lib::ProgramDesc>;
+    using MaterialLibrary = lib::Library<lib::Material>;
 
     using Matrix4 = lib::Matrix4f;
     using Vector3 = lib::Vector3f;
@@ -93,16 +98,18 @@ int main()
     glfwSetFramebufferSizeCallback(window, framebuffer_size_callback);
     lib::MouseHandler mouse_handler(window);
 
+    MaterialLibrary mat_lib;
+    ProgramLibrary prog_lib;
+    
     Scene scene;
     {
-        std::shared_ptr<lib::Material> phong =
-            std::make_shared<lib::Phong<float>>(lib::Vector3f{ 0.8f, 0.4f, 0.1f }, lib::Vector4f{ 1.f, 1.f, 1.f, 100.f });
-        std::shared_ptr<lib::Material> emissive =
-            std::make_shared<lib::Phong<float>>(lib::Vector3f(0), lib::Vector4f(0, 0, 0, 1), lib::Vector3f(1));
-
+        std::shared_ptr<lib::Material> phong = mat_lib.addDerived("phong", lib::Phong<float>(lib::Vector3f{ 0.8f, 0.4f, 0.1f }, lib::Vector4f{ 1.f, 1.f, 1.f, 100.f }));
+        std::shared_ptr<lib::Material> emissive = mat_lib.addDerived("emissive", lib::Phong<float>(lib::Vector3f(0), lib::Vector4f(0, 0, 0, 1), lib::Vector3f(1)));
+        std::shared_ptr<lib::ProgramDesc> normal_prog = prog_lib.addBase("normal_viewer", lib::ProgramDesc(lib::Material::shaderPath().string() + "vector", true));
+        std::shared_ptr<lib::Material> normal_mat = mat_lib.addBase("normal_viewer", normal_prog);
 
         lib::Shape<float, GLuint> cylinder = cylinder.Cylinder(1.0, 1.0, 20, true, true);
-        lib::Shape<float, GLuint> cube_shape = cube_shape.Cube();
+        lib::Shape<float, GLuint> cube_shape = cube_shape.Cube(true);
 
         std::shared_ptr<Mesh> mesh = std::make_shared<Mesh>(cylinder);
         std::shared_ptr<Mesh> cube = std::make_shared<Mesh>(cube_shape);
@@ -113,13 +120,7 @@ int main()
         cube->setup();
         cube->clearHost();
 
-        scene.base.sons.push_back(std::make_shared <lib::LambdaNode<float>>([](float t, float dt, Matrix4& mat)
-            {
-                float s = std::cos(t) + 1.5;
-                mat = lib::scaleMatrix<4, float>(s);
-            }));
-
-        Node* base = scene.base.sons[0].get();
+        Node* base = &scene.base;
 
 
 
@@ -182,6 +183,7 @@ int main()
         scene.m_camera.setDirection(mouse_handler.direction<float>());
 
         scene.draw();
+        scene.customDraw(mat_lib["normal_viewer"].get());
 
         lib::ProgramDesc::useNone();
     }

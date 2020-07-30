@@ -34,9 +34,16 @@ namespace lib
 			return m_elements[key];
 		}
 
-		SPT& add(std::string const& key, T&& element)
+		template <class Q>
+		SPT& addBase(std::string const& key, Q&& base)
 		{
-			return m_elements[key] = std::make_shared<T>(element);
+			return m_elements[key] = std::make_shared<T>(std::move(base));
+		}
+
+		template <class Q>
+		SPT& addDerived(std::string const& key, Q&& derived)
+		{
+			return m_elements[key] = std::make_shared<Q>(std::move(derived));
 		}
 
 		SPT& add(std::string const& key, SPT elem)
@@ -44,17 +51,28 @@ namespace lib
 			return m_elements[key] = elem;
 		}
 
-		SPT& add(std::string && key, T&& element)
+		//template <class Q>
+		//SPT& add(std::string && key, Q&& element)
+		//{
+		//	return m_elements[std::move(key)] = std::make_shared<Q>(std::move(element));
+		//}
+
+		//SPT& add(std::string && key, SPT elem)
+		//{
+		//	return m_elements[key] = elem;
+		//}
+
+		template <class Q, class... Args>
+		SPT& emplace(std::string const& key, Args&&... args)
 		{
-			return m_elements[key] = std::make_shared<T>(element);
+			return m_elements[key] = std::make_shared<Q>(args...);
 		}
 
-		SPT& add(std::string && key, SPT elem)
-		{
-			return m_elements[key] = elem;
-		}
-
-		
+		//template <class Q, class... Args>
+		//SPT& emplace(std::string && key, Args&&... args)
+		//{
+		//	return m_elements[std::move(key)] = std::make_shared<Q>(args...);
+		//}
 		
 	};
 }

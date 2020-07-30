@@ -4,31 +4,43 @@
 
 namespace lib
 {
-	ProgramDesc::ProgramDesc(ShaderPtr& vertex_shader, ShaderPtr& fragment_shader):
+	ProgramDesc::ProgramDesc(ShaderPtr const& vertex_shader, ShaderPtr const& fragment_shader, ShaderPtr const& geometry_shader) :
 		m_vertex_shader(vertex_shader),
 		m_fragment_shader(fragment_shader),
+		m_geometry_shader(geometry_shader),
 		m_id(0)
 	{}
 
 	ProgramDesc::ProgramDesc(ShaderDesc&& vertex_shader, ShaderDesc&& fragment_shader) :
 		m_vertex_shader(std::make_shared<ShaderDesc>(std::move(vertex_shader))),
 		m_fragment_shader(std::make_shared<ShaderDesc>(std::move(fragment_shader))),
+		m_geometry_shader(nullptr),
+		m_id(0)
+	{}
+
+	ProgramDesc::ProgramDesc(ShaderDesc&& vertex_shader, ShaderDesc&& fragment_shader, ShaderDesc&& geometry_shader) :
+		m_vertex_shader(std::make_shared<ShaderDesc>(std::move(vertex_shader))),
+		m_fragment_shader(std::make_shared<ShaderDesc>(std::move(fragment_shader))),
+		m_geometry_shader(std::make_shared<ShaderDesc>(std::move(geometry_shader))),
 		m_id(0)
 	{}
 
 	ProgramDesc::ProgramDesc(ProgramDesc&& other) noexcept:
-		m_vertex_shader(other.m_vertex_shader),
-		m_fragment_shader(other.m_fragment_shader),
+		m_vertex_shader(std::move(other.m_vertex_shader)),
+		m_fragment_shader(std::move(other.m_fragment_shader)),
+		m_geometry_shader(std::move(other.m_geometry_shader)),
 		m_id(other.m_id)
 	{
 		other.m_vertex_shader = nullptr;
 		other.m_fragment_shader = nullptr;
+		other.m_geometry_shader = nullptr;
 		other.m_id = 0;
 	}
 
-	ProgramDesc::ProgramDesc(std::string const& shader_name) :
+	ProgramDesc::ProgramDesc(std::string const& shader_name, bool geomtry) :
 		m_vertex_shader(std::make_shared<ShaderDesc>(shader_name + ".vert", GL_VERTEX_SHADER)),
 		m_fragment_shader(std::make_shared<ShaderDesc>(shader_name + ".frag", GL_FRAGMENT_SHADER)),
+		m_geometry_shader(geomtry ? std::make_shared<ShaderDesc>(shader_name + ".geom", GL_GEOMETRY_SHADER) : nullptr),
 		m_id(0)
 	{}
 
@@ -44,13 +56,16 @@ namespace lib
 	bool ProgramDesc::link()
 	{
 		m_id = glCreateProgram();
-		ShaderDesc* shaders[2] = { m_vertex_shader.get(), m_fragment_shader.get() };
-		for (int i = 0; i < 2; ++i)
+		ShaderDesc* shaders[3] = { m_vertex_shader.get(), m_geometry_shader.get(), m_fragment_shader.get() };
+		for (int i = 0; i < 3; ++i)
 		{
-			ShaderDesc& shader = *shaders[i];
-			if (!shader.isCompiled()) shader.compile();
-			assert(shader.isCompiled());
-			glAttachShader(m_id, shader.id());
+			if (shaders[i])
+			{
+				ShaderDesc& shader = *shaders[i];
+				if (!shader.isCompiled()) shader.compile();
+				assert(shader.isCompiled());
+				glAttachShader(m_id, shader.id());
+			}
 		}
 
 		glLinkProgram(m_id);

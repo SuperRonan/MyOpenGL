@@ -37,7 +37,10 @@ namespace lib
 			m_program->setUniform("u_P", P);
 		}
 		
-
+		static std::filesystem::path const& shaderPath()
+		{
+			return s_shader_path;
+		}
 	};
 
 

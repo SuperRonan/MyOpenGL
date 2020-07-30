@@ -30,6 +30,8 @@ namespace lib
 
 		Vector3<Float> m_ambiant;
 
+
+
 	public:
 
 
@@ -45,6 +47,12 @@ namespace lib
 		void draw()
 		{
 			draw(base.transform, &base);
+			ProgramDesc::useNone();
+		}
+
+		void customDraw(Material* custom)
+		{
+			customDraw(base.transform, &base, custom);
 			ProgramDesc::useNone();
 		}
 
@@ -72,6 +80,25 @@ namespace lib
 			{
 				Matrix4 next = matrix * son->transform;
 				draw(next, son.get());
+			}
+		}
+
+		void customDraw(Matrix4 const& matrix, Node* node, Material * custom)
+		{
+			for (Drawable& d : node->drawable)
+			{
+				custom->use();
+				custom->setMatrices(matrix, m_camera.getMatrixV(), m_camera.getMatrixP());
+				//setLighting(m_lights, *d.material->m_program.get());
+
+				//glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
+
+				d.mesh->draw();
+			}
+			for (std::shared_ptr<Node>& son : node->sons)
+			{
+				Matrix4 next = matrix * son->transform;
+				customDraw(next, son.get(), custom);
 			}
 		}
 
