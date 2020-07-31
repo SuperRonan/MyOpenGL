@@ -12,6 +12,7 @@ struct Light
 	int type;
 	// in world space
 	vec3 position;
+	vec3 direction;
 	vec3 Le;
 };
 
@@ -39,19 +40,29 @@ void main()
 	{
 		Light light = u_lights[i];
 		if(light.type == 0)		continue;
-		else if(light.type == 1) // point light
+
+		vec3 incomming_radiance = vec3(0, 0, 0);
+		vec3 to_light;
+		if(light.type == 1) // point light
 		{
-			vec3 to_light = light.position - v_w_position;
+			to_light = light.position - v_w_position;
 			float dist2 = dot(to_light, to_light);
 			to_light = normalize(to_light);
 			float cos_wi = dot(to_light, w_normal);
-			vec3 diff = max(0.f, cos_wi) * u_diffuse * light.Le / dist2;
-			res += diff;
-
-			float glossy_rho = pow(max(0.f, dot(w_rwo, to_light)), u_glossy.w);
-			vec3 glossy = glossy_rho * u_glossy.xyz * light.Le / dist2;
-			res += glossy;
+			incomming_radiance = light.Le / dist2;
 		}
+		else//(light.type == 2) // directional light
+		{
+			to_light = -light.direction;
+			incomming_radiance = light.Le;
+		}
+
+		float diffuse_rho = max(0.f, dot(w_normal, to_light));
+		vec3 diffuse = diffuse_rho * u_diffuse;
+		float glossy_rho = diffuse_rho > 0 ? pow(max(0.f, dot(w_rwo, to_light)), u_glossy.a) : 0.f;
+		vec3 glossy = glossy_rho * u_glossy.rgb;
+		vec3 reflectance = diffuse + glossy;
+		res += reflectance * incomming_radiance;
 		++i;
 	}
 	//res = vec3(v_uv.x, 0, v_uv.y);

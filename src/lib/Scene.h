@@ -133,16 +133,19 @@ namespace lib
 		{
 			GLchar type_name[] = "u_lights[i].type";
 			GLchar position_name[] = "u_lights[i].position";
+			GLchar direction_name[] = "u_lights[i].direction";
 			GLchar Le_name[] = "u_lights[i].Le";
 			for (int i = 0; i < lights.size(); ++i)
 			{
 				assert(i <= 9);
 				type_name[9] = '0' + i;
 				position_name[9] = '0' + i;
+				direction_name[9] = '0' + i;
 				Le_name[9] = '0' + i;
 
 				program.setUniform(type_name, (GLint)lights[i].type);
 				program.setUniform(position_name, lights[i].position);
+				program.setUniform(direction_name, lights[i].direction);
 				program.setUniform(Le_name, lights[i].Le);
 			}
 
@@ -155,7 +158,7 @@ namespace lib
 		{
 			node->update(t, dt);
 			for (std::shared_ptr<Node>& son : node->sons)
-			{
+			{	
 				update(son.get(), t, dt);
 			}
 		}

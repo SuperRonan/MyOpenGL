@@ -135,7 +135,7 @@ int main()
 
         std::shared_ptr<Node> cube_node = std::make_shared<Node>(lib::scaleMatrix<4, float>(0.2));
         cube_node->emplaceNew<Drawable>(cube, emissive);
-        cube_node->emplaceNew<Light>(Light::PointLight(Vector3(0), Vector3(10)));
+        cube_node->emplaceNew<Light>(Light::PointLight(Vector3(0), Vector3(5)));
 
         Node node1 = lib::translateMatrix<4, float>(Vector3{ 2.f, 1.f, 3.f });
         LambdaNode rotate = LambdaNode([](float t, float dt, Matrix4& mat)
@@ -151,6 +151,8 @@ int main()
 
         base->sons.push_back(std::make_shared<Node>(std::move(node1)));
         base->sons.push_back(std::make_shared<LambdaNode>(std::move(rotate)));
+
+        scene.base.emplaceNew<Light>(Light::DirectionalLight(glm::normalize(-Vector3(1, 1, 1)), Vector3(0.5)));
 
         scene.m_ambiant = { 0.3, 0.3, 0.3 };
 
