@@ -6,8 +6,9 @@
 #include "Mesh.h"
 #include "Camera.h"
 #include "Material.h"
-#include "Lights.h"
+#include "Light.h"
 #include "Node.h"
+#include "Drawable.h"
 
 namespace lib
 {
@@ -26,7 +27,8 @@ namespace lib
 		
 		Camera<Float> m_camera;
 
-		std::vector<Light> m_lights;
+		using LightBuffer = std::vector<Light>;
+		mutable LightBuffer m_lights_buffer;
 
 		Vector3<Float> m_ambiant;
 
@@ -36,7 +38,7 @@ namespace lib
 
 
 		Scene(Vector3<Float> ambiant = { 0, 0, 0 }) :
-			m_lights(5, Light::NoneLight()),
+			m_lights_buffer(5, Light::NoneLight()),
 			m_ambiant(ambiant)
 		{}
 
@@ -46,7 +48,10 @@ namespace lib
 
 		void draw()
 		{
-			draw(base.transform, &base);
+			std::fill(m_lights_buffer.begin(), m_lights_buffer.end(), Light::NoneLight());
+			int n_lights = 0;
+			buildLights(m_lights_buffer, n_lights, base.transform, &base);
+			draw(base.transform, &base, m_lights_buffer);
 			ProgramDesc::useNone();
 		}
 
@@ -64,13 +69,33 @@ namespace lib
 
 	protected:
 
-		void draw(Matrix4 const& matrix, Node* node)
+		void buildLights(LightBuffer & res, int & i, Matrix4 const& mat, Node * node)
 		{
-			for (Drawable& d : node->drawable)
+			std::shared_ptr<const Light> light_ptr = node->get<Light>();
+			if (light_ptr.get())
 			{
+				assert(i <= res.size());
+				Light light = light_ptr->transform(mat);
+				res[i] = light;
+				++i;
+			}
+
+			for (std::shared_ptr<Node>& son : node->sons)
+			{
+				Matrix4 next = mat * son->transform;
+				buildLights(res, i, next, son.get());
+			}	
+		}
+
+		void draw(Matrix4 const& matrix, Node* node, LightBuffer const& lights)
+		{
+			std::shared_ptr<Drawable> d_ptr = node->get<Drawable>();
+			if(d_ptr)
+			{
+				Drawable& d = *d_ptr;
 				d.material->use();
 				d.material->setMatrices(matrix, m_camera.getMatrixV(), m_camera.getMatrixP());
-				setLighting(m_lights, *d.material->m_program.get());
+				setLighting(lights, *d.material->m_program.get());
 
 				//glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
 
@@ -79,13 +104,14 @@ namespace lib
 			for (std::shared_ptr<Node>& son : node->sons)
 			{
 				Matrix4 next = matrix * son->transform;
-				draw(next, son.get());
+				draw(next, son.get(), lights);
 			}
 		}
 
 		void customDraw(Matrix4 const& matrix, Node* node, Material * custom)
 		{
-			for (Drawable& d : node->drawable)
+			std::shared_ptr<Drawable> d_ptr = node->get<Drawable>();
+			if (d_ptr)
 			{
 				custom->use();
 				custom->setMatrices(matrix, m_camera.getMatrixV(), m_camera.getMatrixP());
@@ -93,7 +119,7 @@ namespace lib
 
 				//glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
 
-				d.mesh->draw();
+				d_ptr->mesh->draw();
 			}
 			for (std::shared_ptr<Node>& son : node->sons)
 			{
@@ -103,7 +129,7 @@ namespace lib
 		}
 
 		// assumes the program is already being used
-		void setLighting(std::vector<Light> const& lights, ProgramDesc& program)
+		void setLighting(LightBuffer const& lights, ProgramDesc& program)
 		{
 			GLchar type_name[] = "u_lights[i].type";
 			GLchar position_name[] = "u_lights[i].position";

@@ -2,11 +2,12 @@
 
 #include <glm/gtc/matrix_transform.hpp>
 #include "Math.h"
+#include "Component.h"
 
 namespace lib
 {
 	template <class Float>
-	class Camera
+	class Camera : public Component
 	{
 	public:
 
@@ -44,6 +45,8 @@ namespace lib
 		{}
 		
 		Camera(Camera const& other) = default;
+
+		virtual ~Camera() = default;
 
 		Matrix4 getMatrixV()const
 		{

@@ -63,13 +63,19 @@
     <ClInclude Include="..\src\lib\Material.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="..\src\lib\Lights.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
     <ClInclude Include="..\src\lib\Shapes.h">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="..\src\lib\Node.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\lib\Component.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\lib\Drawable.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\lib\Light.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>

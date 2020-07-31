@@ -147,12 +147,14 @@
   <ItemGroup>
     <ClInclude Include="..\src\lib\Camera.h" />
     <ClInclude Include="..\src\lib\Camera2D.h" />
+    <ClInclude Include="..\src\lib\Component.h" />
+    <ClInclude Include="..\src\lib\Drawable.h" />
     <ClInclude Include="..\src\lib\Library.h" />
     <ClInclude Include="..\src\lib\Log.h" />
     <ClInclude Include="..\src\lib\Material.h" />
     <ClInclude Include="..\src\lib\Math.h" />
     <ClInclude Include="..\src\lib\Mesh.h" />
-    <ClInclude Include="..\src\lib\Lights.h" />
+    <ClInclude Include="..\src\lib\Light.h" />
     <ClInclude Include="..\src\lib\MouseHandler.h" />
     <ClInclude Include="..\src\lib\Node.h" />
     <ClInclude Include="..\src\lib\ProgramDesc.h" />

@@ -67,7 +67,7 @@ namespace lib
 	}
 
 	template <int N, class Float>
-	glm::vec<N, Float> deHomogenize(Vector<N + 1, Float> const& h_vec)
+	Vector<N, Float> deHomogenize(Vector<N + 1, Float> const& h_vec)
 	{
 		Vector<N, Float> res;
 		if (h_vec[N] != 0)
@@ -81,5 +81,11 @@ namespace lib
 				res[i] = h_vec[i];
 		}
 		return res;
+	}
+
+	template <class Float>
+	Matrix3<Float> directionMatrix(Matrix4<Float> const& mat)
+	{
+		return glm::transpose(glm::inverse(Matrix3<Float>(mat)));
 	}
 }

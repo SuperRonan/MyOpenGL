@@ -22,6 +22,8 @@
 #include <lib/Shapes.h>
 #include <lib/Transforms.h>
 #include <lib/Library.h>
+#include <lib/StreamOperators.h>
+#include <lib/Drawable.h>
 
 void framebuffer_size_callback(GLFWwindow* window, int width, int height)
 {
@@ -65,7 +67,9 @@ int main()
     using Mesh = lib::Mesh<float>;
     using Scene = lib::Scene<float>;
     using Node = lib::Node<float>;
+    using LambdaNode = lib::LambdaNode<float>;
     using Drawable = lib::Drawable<float>;
+    using Light = lib::Light<float>;
     using ProgramLibrary = lib::Library<lib::ProgramDesc>;
     using MaterialLibrary = lib::Library<lib::Material>;
 
@@ -100,15 +104,16 @@ int main()
 
     MaterialLibrary mat_lib;
     ProgramLibrary prog_lib;
-    
+
     Scene scene;
     {
-        std::shared_ptr<lib::Material> phong = mat_lib.addDerived("phong", lib::Phong<float>(lib::Vector3f{ 0.8f, 0.4f, 0.1f }, lib::Vector4f{ 1.f, 1.f, 1.f, 100.f }));
+        std::shared_ptr<lib::Material> phong = mat_lib.addDerived("phong", 
+            lib::Phong<float>(lib::Vector3f{ 0.8f, 0.4f, 0.1f }, lib::Vector4f{ 1.f, 1.f, 1.f, 100.f }));
         std::shared_ptr<lib::Material> emissive = mat_lib.addDerived("emissive", lib::Phong<float>(lib::Vector3f(0), lib::Vector4f(0, 0, 0, 1), lib::Vector3f(1)));
         std::shared_ptr<lib::ProgramDesc> normal_prog = prog_lib.addBase("normal_viewer", lib::ProgramDesc(lib::Material::shaderPath().string() + "vector", true));
         std::shared_ptr<lib::Material> normal_mat = mat_lib.addBase("normal_viewer", normal_prog);
 
-        lib::Shape<float, GLuint> cylinder = cylinder.Cylinder(1.0, 1.0, 20, true, true);
+        lib::Shape<float, GLuint> cylinder = cylinder.Cylinder(1.0, 1.0, 2000, true, true);
         lib::Shape<float, GLuint> cube_shape = cube_shape.Cube(true);
 
         std::shared_ptr<Mesh> mesh = std::make_shared<Mesh>(cylinder);
@@ -125,24 +130,27 @@ int main()
 
 
         Drawable obj = { mesh, phong };
-        base->sons.push_back(std::make_shared<Node>(lib::translateMatrix<4, float>({ 0, -1, 0 }) * lib::scaleMatrix<4, float>({ 2, 0.1, 2 })));
-        base->sons[0]->addDrawable(std::move(obj));
+        base->sons.push_back(std::make_shared<Node>(lib::translateMatrix<4, float>({ 0, -1, 0 }) * lib::scaleMatrix<4, float>({ 5, 0.1, 5 })));
+        base->sons[0]->addNew<Drawable>(std::move(obj));
 
         std::shared_ptr<Node> cube_node = std::make_shared<Node>(lib::scaleMatrix<4, float>(0.2));
-        cube_node->emplaceDrawable(cube, emissive);
+        cube_node->emplaceNew<Drawable>(cube, emissive);
+        cube_node->emplaceNew<Light>(Light::PointLight(Vector3(0), Vector3(10)));
 
         Node node1 = lib::translateMatrix<4, float>(Vector3{ 2.f, 1.f, 3.f });
+        LambdaNode rotate = LambdaNode([](float t, float dt, Matrix4& mat)
+            {
+                mat *= glm::rotate(Matrix4(1), glm::radians(dt*100), Vector3(0, 1, 0));
+            });
         Node node2 = lib::translateMatrix<4, float>(Vector3{ 0.f, 1.f, -3.f });
 
         node1.sons.push_back(cube_node);
         node2.sons.push_back(cube_node);
 
-        base->sons.push_back(std::make_shared<Scene::Node>(std::move(node1)));
-        base->sons.push_back(std::make_shared<Scene::Node>(std::move(node2)));
+        rotate.sons.push_back(std::make_shared<Node>(std::move(node2)));
 
-
-        scene.m_lights[0] = lib::Light<float>::PointLight({ 2.f, 1.f, 3.f }, Vector3(10));
-        scene.m_lights[1] = lib::Light<float>::PointLight({ 0.f, 1.f, -3.f }, Vector3(10));
+        base->sons.push_back(std::make_shared<Node>(std::move(node1)));
+        base->sons.push_back(std::make_shared<LambdaNode>(std::move(rotate)));
 
         scene.m_ambiant = { 0.3, 0.3, 0.3 };
 
@@ -183,7 +191,7 @@ int main()
         scene.m_camera.setDirection(mouse_handler.direction<float>());
 
         scene.draw();
-        scene.customDraw(mat_lib["normal_viewer"].get());
+        //scene.customDraw(mat_lib["normal_viewer"].get());
 
         lib::ProgramDesc::useNone();
     }

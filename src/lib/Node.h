@@ -3,36 +3,21 @@
 #include <memory>
 #include <vector>
 #include <functional>
+#include <type_traits>
 
 #include "Mesh.h"
 #include "Math.h"
 #include "Material.h"
+#include "Component.h"
 
 namespace lib
 {
-	template <class Float>
-	struct Drawable
-	{
-	protected:
-
-	public:
-
-		std::shared_ptr<Mesh<Float>> mesh;
-		std::shared_ptr<Material> material;
-
-		Drawable(std::shared_ptr<Mesh<Float>> const& mesh, std::shared_ptr<Material> const& material) :
-			mesh(mesh),
-			material(material)
-		{}
-	};
-
 	template <class Float>
 	class Node
 	{
 	protected:
 
 		using Matrix4 = Matrix4<Float>;
-		using Drawable = Drawable<Float>;
 
 	public:
 
@@ -40,7 +25,7 @@ namespace lib
 
 		std::vector<std::shared_ptr<Node>> sons;
 
-		std::vector<Drawable> drawable;
+		std::vector<std::shared_ptr<Component>> components;
 
 		Node(Matrix4 const& mat = Matrix4(1)):
 			transform(mat)
@@ -56,16 +41,52 @@ namespace lib
 			sons(sons)
 		{}
 
-		void addDrawable(Drawable const& d)
+		template<class ComponentDerived>
+		void addNew(ComponentDerived const& c)
 		{
-			drawable.push_back(d);
+			static_assert(std::is_base_of<Component, ComponentDerived>::value);
+			components.emplace_back(std::make_shared<ComponentDerived>(c));
 		}
 
-		template <class... Args>
-		void emplaceDrawable(Args&&... args)
+		template<class ComponentDerived>
+		void addNew(ComponentDerived && c)
 		{
-			drawable.emplace_back(args...);
+			static_assert(std::is_base_of<Component, ComponentDerived>::value);
+			components.emplace_back(std::make_shared<ComponentDerived>(c));
 		}
+
+		template <class ComponentDerived, class... Args>
+		void emplaceNew(Args&&... args)
+		{
+			static_assert(std::is_base_of<Component, ComponentDerived>::value);
+			components.emplace_back(std::make_shared<ComponentDerived>(args...));
+		}
+
+		void add(std::shared_ptr<Component> c)
+		{
+			components.emplace_back(c);
+		}
+		
+
+		std::shared_ptr<Component> getComponent(int i)
+		{
+			return components[i];
+		}
+		
+		template <class ComponentDerived>
+		std::shared_ptr<ComponentDerived> get()
+		{
+			static_assert(std::is_base_of<Component, ComponentDerived>::value);
+			for (int i = 0; i < components.size(); ++i)
+			{
+				std::shared_ptr<ComponentDerived> res = std::dynamic_pointer_cast<ComponentDerived>(components[i]);
+				if (res.get())
+					return res;
+			}
+			return nullptr;
+		}
+
+		
 		
 		virtual void update(Float t, Float dt)
 		{}
