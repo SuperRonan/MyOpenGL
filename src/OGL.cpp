@@ -24,11 +24,7 @@
 #include <lib/Library.h>
 #include <lib/StreamOperators.h>
 #include <lib/Drawable.h>
-
-void framebuffer_size_callback(GLFWwindow* window, int width, int height)
-{
-    glViewport(0, 0, width, height);
-}
+#include <lib/Window.h>
 
 void processInput(GLFWwindow* window, glm::vec3 & moving, float & fov)
 {
@@ -83,24 +79,22 @@ int main()
     glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
     int w = 1920, h = 1080;
     
-    GLFWwindow* window = createCenteredWindow(w, h, "OpenGL go Brrrrrr...");
-    if (window == NULL)
+    lib::Window window(w, h, "OpenGL go Brrrrrr...");
+    if (!window.isOk())
     {
-        std::cerr << "Could not create the window:\n" << std::endl;
         glfwTerminate();
         return -1;
     }
-    glfwMakeContextCurrent(window);
-
+    window.makeCurrent();
+    
     if (!gladLoadGLLoader((GLADloadproc)glfwGetProcAddress))
     {
         std::cerr << "Could not initialize GLAD" << std::endl;
         glfwTerminate();
         return -1;
     }
-    glViewport(0, 0, w, h);
-    glfwSetFramebufferSizeCallback(window, framebuffer_size_callback);
-    lib::MouseHandler mouse_handler(window);
+
+    lib::MouseHandler mouse_handler(window.get());
 
     MaterialLibrary mat_lib;
     ProgramLibrary prog_lib;
@@ -166,19 +160,19 @@ int main()
     glCullFace(GL_BACK);
     double t = glfwGetTime(), dt;
 
-    while (!glfwWindowShouldClose(window))
+    while (!window.shouldClose())
     {
         {
             double new_t = glfwGetTime();
             dt = new_t - t;
             t = new_t;
         }
-        glfwSwapBuffers(window);
+        window.swapBuffers();
         glfwPollEvents();
 
         glm::vec3 zqsd;
 
-        processInput(window, zqsd, mouse_handler.fov);
+        processInput(window.get(), zqsd, mouse_handler.fov);
         mouse_handler.update(dt);
         //mouse_handler.print(std::cout);
         {

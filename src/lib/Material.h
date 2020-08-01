@@ -19,6 +19,8 @@ namespace lib
 
 		std::shared_ptr<ProgramDesc> m_program;
 
+		bool uses_lighting = false;
+
 		Material() = default;
 		Material(std::shared_ptr<ProgramDesc> const& program);
 		Material(std::shared_ptr<ProgramDesc> && program);
@@ -75,6 +77,7 @@ namespace lib
 			if (!s_phong_shader->isLinked())
 				s_phong_shader->link();
 			s_phong_shader->printUniforms(std::cout);
+			uses_lighting = true;
 		}
 
 

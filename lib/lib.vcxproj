@@ -165,6 +165,7 @@
     <ClInclude Include="..\src\lib\Transforms.h" />
     <ClInclude Include="..\src\lib\Vertex.h" />
     <ClInclude Include="..\src\lib\Vertex2D.h" />
+    <ClInclude Include="..\src\lib\Window.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\src\lib\Log.cpp" />
@@ -172,6 +173,7 @@
     <ClCompile Include="..\src\lib\MouseHandler.cpp" />
     <ClCompile Include="..\src\lib\ProgramDesc.cpp" />
     <ClCompile Include="..\src\lib\ShaderDesc.cpp" />
+    <ClCompile Include="..\src\lib\Window.cpp" />
   </ItemGroup>
   <ItemGroup>
     <None Include="..\shaders\phong.frag" />

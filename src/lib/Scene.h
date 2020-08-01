@@ -18,6 +18,7 @@ namespace lib
 	public:
 
 		using Matrix4 = Matrix4<Float>;
+		using Vector3 = Vector3<Float>;
 		using Mesh = Mesh<Float>;
 		using Light = Light<Float>;
 		using Node = Node<Float>;
@@ -30,14 +31,14 @@ namespace lib
 		using LightBuffer = std::vector<Light>;
 		mutable LightBuffer m_lights_buffer;
 
-		Vector3<Float> m_ambiant;
+		Vector3 m_ambiant;
 
 
 
 	public:
 
 
-		Scene(Vector3<Float> ambiant = { 0, 0, 0 }) :
+		Scene(Vector3 ambiant = { 0, 0, 0 }) :
 			m_lights_buffer(5, Light::NoneLight()),
 			m_ambiant(ambiant)
 		{}
@@ -95,7 +96,8 @@ namespace lib
 				Drawable& d = *d_ptr;
 				d.material->use();
 				d.material->setMatrices(matrix, m_camera.getMatrixV(), m_camera.getMatrixP());
-				setLighting(lights, *d.material->m_program.get());
+				if(d.material->uses_lighting)
+					setLighting(lights, *d.material->m_program.get());
 
 				//glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
 
@@ -149,7 +151,7 @@ namespace lib
 				program.setUniform(Le_name, lights[i].Le);
 			}
 
-			Vector3<Float> cam_pos = m_camera.getPosition();
+			Vector3 cam_pos = m_camera.getPosition();
 			program.setUniform("u_w_camera_position", cam_pos);
 			program.setUniform("u_ambiant", m_ambiant);
 		}

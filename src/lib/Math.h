@@ -66,3 +66,12 @@ namespace lib
 	using Matrix3d = Matrix3<double>;
 	using Matrix4d = Matrix4<double>;
 }
+
+#define USING_MATHS_TYPES_NO_NAMESPACE(FLOAT) \
+using Vector2 = Vector2<FLOAT>;\
+using Vector3 = Vector3<FLOAT>;\
+using Vector4 = Vector4<FLOAT>;\
+\
+using Matrix2 = Matrix2<FLOAT>;\
+using Matrix3 = Matrix3<FLOAT>;\
+using Matrix4 = Matrix4<FLOAT>;\
