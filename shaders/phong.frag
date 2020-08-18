@@ -1,5 +1,7 @@
 #version 330 core
-uniform vec3 u_diffuse;
+
+//uniform vec3 u_diffuse;
+uniform sampler2D u_t_diffuse;
 
 uniform vec4 u_glossy;
 
@@ -31,11 +33,14 @@ out vec4 o_color;
 
 void main()
 {
-	vec3 res = u_emissive + u_diffuse * u_ambiant;
 	vec3 w_normal = normalize(v_w_normal);
 	vec3 w_wo = normalize(u_w_camera_position - v_w_position);
 	vec3 w_rwo = reflect(-w_wo, w_normal);
 	int i=0;
+
+	vec3 u_diffuse = texture(u_t_diffuse, v_uv).xyz;
+
+	vec3 res = u_emissive + u_diffuse * u_ambiant;
 	while(i<MAX_LIGHTS)
 	{
 		Light light = u_lights[i];
