@@ -125,4 +125,24 @@
       <Filter>shaders</Filter>
     </None>
   </ItemGroup>
+  <ItemGroup>
+    <Image Include="..\ressources\brickwall.jpg">
+      <Filter>Resource Files</Filter>
+    </Image>
+    <Image Include="..\ressources\brickwall.png">
+      <Filter>Resource Files</Filter>
+    </Image>
+    <Image Include="..\ressources\brickwall_normal.jpg">
+      <Filter>Resource Files</Filter>
+    </Image>
+    <Image Include="..\ressources\brickwall_normal.png">
+      <Filter>Resource Files</Filter>
+    </Image>
+    <Image Include="..\ressources\wall.jpg">
+      <Filter>Resource Files</Filter>
+    </Image>
+    <Image Include="..\ressources\wall.png">
+      <Filter>Resource Files</Filter>
+    </Image>
+  </ItemGroup>
 </Project>

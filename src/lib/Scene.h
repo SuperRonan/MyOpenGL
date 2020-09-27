@@ -52,6 +52,11 @@ namespace lib
 			std::fill(m_lights_buffer.begin(), m_lights_buffer.end(), Light::NoneLight());
 			int n_lights = 0;
 			buildLights(m_lights_buffer, n_lights, base.transform, &base);
+
+			glEnable(GL_DEPTH_TEST);
+			glEnable(GL_CULL_FACE);
+			glCullFace(GL_BACK);
+			
 			draw(base.transform, &base, m_lights_buffer);
 			ProgramDesc::useNone();
 		}

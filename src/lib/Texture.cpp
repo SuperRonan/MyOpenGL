@@ -6,4 +6,9 @@ namespace lib
 	{
 		return m_id;
 	}
+
+	bool Texture::deviceValid()const
+	{
+		return id();
+	}
 }

@@ -120,7 +120,10 @@ namespace lib
 			glVertexAttribPointer(1, 3, GL_Float(), GL_FALSE, Vertex::stride(), (void*)Vertex::normalOffset());
 
 			glEnableVertexAttribArray(2);
-			glVertexAttribPointer(2, 2, GL_Float(), GL_FALSE, Vertex::stride(), (void*)Vertex::uvOffset());
+			glVertexAttribPointer(2, 3, GL_FLOAT, GL_FALSE, Vertex::stride(), (void*)Vertex::tangentOffset());
+
+			glEnableVertexAttribArray(3);
+			glVertexAttribPointer(3, 2, GL_Float(), GL_FALSE, Vertex::stride(), (void*)Vertex::uvOffset());
 
 			glBindVertexArray(0);
 		}

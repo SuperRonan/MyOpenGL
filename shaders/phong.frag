@@ -1,13 +1,24 @@
 #version 330 core
 
-//uniform vec3 u_diffuse;
+// 0 (1) diffuse
+// 1 (2) glossy
+// 2 (4) emissive
+// 3 (8) normal
+uniform int u_tex_flags;
+
 uniform sampler2D u_t_diffuse;
 
-uniform vec4 u_glossy;
+uniform vec3 u_c_diffuse;
 
-uniform vec3 u_emissive;
+uniform vec4 u_c_glossy;
 
+uniform vec3 u_c_emissive;
+
+uniform sampler2D u_t_normal;
+
+#ifndef MAX_LIGHTS
 #define MAX_LIGHTS 5
+#endif
 
 struct Light
 {
@@ -26,6 +37,7 @@ uniform vec3 u_w_camera_position;
 
 in vec3 v_w_position;
 in vec3 v_w_normal;
+in vec3 v_w_tangent;
 
 in vec2 v_uv;
 
@@ -34,11 +46,28 @@ out vec4 o_color;
 void main()
 {
 	vec3 w_normal = normalize(v_w_normal);
+	if((u_tex_flags & 8) != 0)
+	{
+		vec3 w_tangent = normalize(v_w_tangent);
+		vec3 w_btg = cross(w_normal, w_tangent);
+		mat3 TBN = (mat3(w_tangent, w_btg, w_normal));
+		vec3 texture_normal = texture2D(u_t_normal, v_uv).xyz;
+		texture_normal = (texture_normal * 2.f - 1.f);
+		w_normal = normalize(TBN * texture_normal);
+	}
+	
 	vec3 w_wo = normalize(u_w_camera_position - v_w_position);
 	vec3 w_rwo = reflect(-w_wo, w_normal);
 	int i=0;
 
-	vec3 u_diffuse = texture(u_t_diffuse, v_uv).xyz;
+	vec3 u_diffuse = u_c_diffuse;
+	if((u_tex_flags & 1) != 0)
+		u_diffuse = u_diffuse * texture2D(u_t_diffuse, v_uv).xyz;
+
+	
+	vec4 u_glossy = u_c_glossy;
+
+	vec3 u_emissive = u_c_emissive;
 
 	vec3 res = u_emissive + u_diffuse * u_ambiant;
 	while(i<MAX_LIGHTS)

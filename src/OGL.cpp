@@ -59,6 +59,19 @@ GLFWwindow* createCenteredWindow(int w, int h, const char * name)
     return res;
 }
 
+void reverseNormal(img::Image<img::io::RGBu>& normal_map, bool x_axis=true, bool y_axis=true)
+{
+    using RGBu = img::io::RGBu;
+    normal_map.loop1D([&](int id)
+        {
+            RGBu& pixel = normal_map[id];
+            if(x_axis)
+                pixel[0] = 255 - pixel[0];
+            if(y_axis)
+                pixel[1] = 255 - pixel[1];
+        });
+}
+
 
 
 int main()
@@ -108,14 +121,34 @@ int main()
 
     Scene scene;
     {
-        std::shared_ptr<lib::Material> phong = mat_lib.addDerived("phong", 
-            lib::Phong<float>(lib::Vector3f{ 0.8f, 0.4f, 0.1f }, lib::Vector4f{ 0.f, 0.f, 0.f, 100.f }));
-        std::shared_ptr<lib::Material> emissive = mat_lib.addDerived("emissive", lib::Phong<float>(lib::Vector3f(0), lib::Vector4f(0, 0, 0, 1), lib::Vector3f(1)));
-        std::shared_ptr<lib::ProgramDesc> normal_prog = prog_lib.addBase("normal_viewer", lib::ProgramDesc(lib::Material::shaderPath().string() + "vector", true));
-        std::shared_ptr<lib::Material> normal_mat = mat_lib.addBase("normal_viewer", normal_prog);
+        img::Image<img::io::RGBu> img_diffuse = img::io::read<img::io::RGBu>("../ressources/brickwall.png");
+        img::Image<img::io::RGBu> img_normal = img::io::read<img::io::RGBu>("../ressources/brickwall_normal.png");
+        reverseNormal(img_normal, false, true);
 
-        lib::Shape<float, GLuint> cylinder = cylinder.Cylinder(1.0, 1.0, 20, true, true);
-        lib::Shape<float, GLuint> cube_shape = cube_shape.Cube(true);
+        std::shared_ptr<lib::Texture> texture_diffuse = std::make_shared<lib::_Texture<img::io::RGBu>>(img_diffuse);
+        std::shared_ptr<lib::Texture> texture_normal = std::make_shared<lib::_Texture<img::io::RGBu>>(img_normal);
+        
+        texture_diffuse->sendToDevice();
+        texture_normal->sendToDevice();
+        texture_diffuse->deleteHost();
+        texture_normal->deleteHost();
+
+        tex_lib.add("diffuse", texture_diffuse);
+        tex_lib.add("normal", texture_normal);
+
+        std::shared_ptr<lib::Phong<float>> phong = std::make_shared<lib::Phong<float>>(
+            lib::Phong<float>(lib::Vector3f{ 1, 1, 1 }, lib::Vector4f{ 1.f, 1.f, 1.f, 100.f }));
+        phong->m_diffuse_tex = texture_diffuse;
+        phong->m_normal_map = texture_normal;
+        mat_lib.add("phong", phong);
+
+        std::shared_ptr<lib::Material> emissive = mat_lib.addDerived("emissive", lib::Phong<float>(lib::Vector3f(0), lib::Vector4f(0, 0, 0, 1), lib::Vector3f(1)));
+        std::shared_ptr<lib::ProgramDesc> vector_prog = prog_lib.addBase("vector_viewer", lib::ProgramDesc(lib::Material::shaderPath().string() + "vector", true));
+        std::shared_ptr<lib::Material> vector_mat = mat_lib.addBase("vector_viewer", vector_prog);
+        vector_prog->setUniform("u_t_normal", 0);
+
+        lib::Shape<float, GLuint> cylinder = cylinder.Cylinder(1.0, 1.0, 200, true, true);
+        lib::Shape<float, GLuint> cube_shape = cube_shape.Cube();
 
         std::shared_ptr<Mesh> mesh = std::make_shared<Mesh>(cylinder);
         std::shared_ptr<Mesh> cube = std::make_shared<Mesh>(cube_shape);
@@ -131,19 +164,24 @@ int main()
 
 
         Drawable obj = { mesh, phong };
-        base->sons.push_back(std::make_shared<Node>(lib::translateMatrix<4, float>({ 0, -1, 0 }) * lib::scaleMatrix<4, float>({ 1.41, 3, 1.41 })));
-        base->sons[0]->addNew<Drawable>(std::move(obj));
+        //base->sons.push_back(std::make_shared<Node>(lib::translateMatrix<4, float>({ 0, -1, 0 }) * lib::scaleMatrix<4, float>({ 1.41, 3, 1.41 })));
+        LambdaNode cylinder_rotate = LambdaNode([](float t, float dt, Matrix4& mat)
+            {
+                //mat *= glm::rotate(Matrix4(1), glm::radians(dt * 10), Vector3(0, 1, 0));
+            });
+        cylinder_rotate.addNew<Drawable>(std::move(obj));
+        base->sons.push_back(std::make_shared<LambdaNode>(std::move(cylinder_rotate)));
 
-        std::shared_ptr<Node> cube_node = std::make_shared<Node>(lib::scaleMatrix<4, float>(0.2));
+        std::shared_ptr<Node> cube_node = std::make_shared<Node>(lib::scaleMatrix<4, float>(0.1));
         cube_node->emplaceNew<Drawable>(cube, emissive);
         cube_node->emplaceNew<Light>(Light::PointLight(Vector3(0), Vector3(5)));
-
-        Node node1 = lib::translateMatrix<4, float>(Vector3{ 2.f, 1.f, 3.f });
+        
+        Node node1 = lib::translateMatrix<4, float>(Vector3{ 2.f, 1.5f, 1.f });
         LambdaNode rotate = LambdaNode([](float t, float dt, Matrix4& mat)
             {
-                mat *= glm::rotate(Matrix4(1), glm::radians(dt*100), Vector3(0, 1, 0));
+                mat *= glm::rotate(Matrix4(1), glm::radians(dt*50), Vector3(0, 1, 0));
             });
-        Node node2 = lib::translateMatrix<4, float>(Vector3{ 0.f, 2.f, -3.f });
+        Node node2 = lib::translateMatrix<4, float>(Vector3{ 0.f, 2.f, 1.f });
 
         node1.sons.push_back(cube_node);
         node2.sons.push_back(cube_node);
@@ -156,20 +194,13 @@ int main()
         scene.base.emplaceNew<Light>(Light::DirectionalLight(glm::normalize(-Vector3(1, 1, 1)), Vector3(0.5)));
 
         scene.m_ambiant = { 0.3, 0.3, 0.3 };
-
-        img::Image<img::io::RGBu> img = img::io::read<img::io::RGBu>("../ressources/wall.png");
         
-        std::shared_ptr<lib::Texture> texture = std::make_shared<lib::_Texture<img::io::RGBu>>(img);
-        texture->sendToDevice();
-        texture->deleteHost();
-        tex_lib.add("tex", texture);
         //scene.m_camera.setPosition(scene.m_lights[0].position);
     }
 
-    glEnable(GL_DEPTH_TEST);
-    glEnable(GL_CULL_FACE);
-    glCullFace(GL_BACK);
+    
     double t = glfwGetTime(), dt;
+    
 
     while (!window.shouldClose())
     {
@@ -198,7 +229,8 @@ int main()
         scene.m_camera.setDirection(mouse_handler.direction<float>());
 
         scene.draw();
-        //scene.customDraw(mat_lib["normal_viewer"].get());
+        //tex_lib["normal"]->use(0);
+        //scene.customDraw(mat_lib["vector_viewer"].get());
 
         lib::ProgramDesc::useNone();
     }

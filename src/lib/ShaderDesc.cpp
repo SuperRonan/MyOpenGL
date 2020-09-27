@@ -10,7 +10,7 @@ namespace lib
         std::string res;
         std::ifstream file(file_name);
         if (!file.is_open())
-            throw std::logic_error(std::string("Unable to open file ") + file_name);
+            throw std::runtime_error(std::string("Unable to open file ") + file_name);
         file.seekg(0, std::ios::end);
         res.reserve(file.tellg());
         file.seekg(0, std::ios::beg);
@@ -23,6 +23,10 @@ namespace lib
     {
         return readFile(file_name.c_str());
     }
+
+    ShaderDesc::ShaderDesc():
+        m_shader_id(0)
+    {}
 
     ShaderDesc::ShaderDesc(const char* file, GLenum type) :
         m_file(file),
@@ -53,9 +57,34 @@ namespace lib
         }
     }
 
-	bool ShaderDesc::compile()
+    ShaderDesc& ShaderDesc::operator=(ShaderDesc&& other)
+    {
+        m_file = std::move(other.m_file);
+        m_type = other.m_type;
+        m_shader_id = other.m_shader_id;
+        other.m_shader_id = 0;
+        return *this;
+    }
+
+	bool ShaderDesc::compile(std::vector<std::string> const& defines)
 	{
         std::string code = readFile(m_file);
+
+        if (!defines.empty())
+        {
+            // remove the #version at the begining of the file
+            auto ptr_1 = std::find(code.begin(), code.end(), '#');
+            auto ptr_2 = std::find(code.begin(), code.end(), '\n');
+            std::string header(ptr_1, ptr_2);
+            std::fill(code.begin(), ptr_2, ' ');
+            
+            for (std::string const& define : defines)
+            {
+                header += std::string("#define ") + define + "\n";
+            }
+            code = header + code;
+        }
+
         const GLchar* code_gl = code.c_str();
 
         m_shader_id = glCreateShader(m_type);

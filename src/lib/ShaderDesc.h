@@ -2,6 +2,7 @@
 
 #include <glad/glad.h>
 #include <string>
+#include <vector>
 
 
 namespace lib
@@ -18,6 +19,8 @@ namespace lib
 
 	public:
 
+		ShaderDesc();
+
 		ShaderDesc(const char* file, GLenum type);
 
 		ShaderDesc(std::string const& file, GLenum type);
@@ -26,9 +29,11 @@ namespace lib
 
 		ShaderDesc(ShaderDesc&& other);
 
+		ShaderDesc& operator=(ShaderDesc&& other);
+
 		~ShaderDesc();
 		
-		bool compile();
+		bool compile(std::vector<std::string> const& defines=std::vector<std::string>());
 
 		bool isCompiled()const;
 

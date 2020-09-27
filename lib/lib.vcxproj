@@ -184,6 +184,14 @@
     <None Include="..\shaders\vector.geom" />
     <None Include="..\shaders\vector.vert" />
   </ItemGroup>
+  <ItemGroup>
+    <Image Include="..\ressources\brickwall.jpg" />
+    <Image Include="..\ressources\brickwall.png" />
+    <Image Include="..\ressources\brickwall_normal.jpg" />
+    <Image Include="..\ressources\brickwall_normal.png" />
+    <Image Include="..\ressources\wall.jpg" />
+    <Image Include="..\ressources\wall.png" />
+  </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
   </ImportGroup>

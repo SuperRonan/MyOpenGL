@@ -53,6 +53,79 @@ namespace lib
             }
         }
 
+        void computeTangents()
+        {
+            // https://marti.works/posts/post-calculating-tangents-for-your-mesh/post/
+            // https://learnopengl.com/Advanced-Lighting/Normal-Mapping
+            uint number_of_triangles = m_indices.size() / 3;
+
+            struct tan 
+            {
+                Vector3 tg, btg;
+            };
+
+            std::vector<tan> tans(m_vertices.size(), tan{ Vector3(0), Vector3(0) });
+
+            for (uint triangle_index = 0; triangle_index < number_of_triangles; ++triangle_index)
+            {
+                uint i0 = m_indices[triangle_index*3];
+                uint i1 = m_indices[triangle_index*3 +1];
+                uint i2 = m_indices[triangle_index*3 +2];
+
+                Vector3 pos0 = m_vertices[i0].position;
+                Vector3 pos1 = m_vertices[i1].position;
+                Vector3 pos2 = m_vertices[i2].position;
+
+                Vector2 tex0 = m_vertices[i0].uv;
+                Vector2 tex1 = m_vertices[i1].uv;
+                Vector2 tex2 = m_vertices[i2].uv;
+
+                Vector3 edge1 = pos1 - pos0;
+                Vector3 edge2 = pos2 - pos0;
+
+                Vector2 uv1 = tex1 - tex0;
+                Vector2 uv2 = tex2 - tex0;
+
+                // Implicit matrix [uv1[1], -uv1[0]; -uv2[1], uv2[0]]
+                // The determinent of this matrix
+                Float d = Float(1) / (uv1[0] * uv2[1] - uv1[1] * uv2[0]);
+
+                Vector3 tg = Vector3{ 
+                    ((edge1[0] * uv2[1]) - (edge2[0] * uv1[1])),
+                    ((edge1[1] * uv2[1]) - (edge2[1] * uv1[1])),
+                    ((edge1[2] * uv2[1]) - (edge2[2] * uv1[1])),
+                } * d;
+
+                Vector3 btg = Vector3{
+                    ((edge1[0] * uv2[0]) - (edge2[0] * uv1[0])),
+                    ((edge1[1] * uv2[0]) - (edge2[1] * uv1[0])),
+                    ((edge1[2] * uv2[0]) - (edge2[2] * uv1[0])),
+                } * d;
+
+                tans[i0].tg += tg;
+                tans[i1].tg += tg;
+                tans[i2].tg += tg;
+
+                tans[i0].btg += btg;
+                tans[i1].btg += btg;
+                tans[i2].btg += btg;
+            }
+
+            for (uint vertex_id = 0; vertex_id < m_vertices.size(); ++vertex_id)
+            {
+                Vector3 normal = m_vertices[vertex_id].normal;
+                Vector3 tg = tans[vertex_id].tg;
+                Vector3 btg = tans[vertex_id].btg;
+
+                Vector3 t = tg - (normal * glm::dot(normal, tg));
+                t = glm::normalize(t);
+
+                Vector3 c = glm::cross(normal, tg);
+                Float w = (glm::dot(c, btg) < 0) ? -1 : 1;
+                m_vertices[vertex_id].tangent = t * w;
+            }
+        }
+
 		static Shape Cube(bool vertex_normals=false)
 		{
 			Shape res;
@@ -154,7 +227,7 @@ namespace lib
                 addFace(6, 2, 3, 7, 2); // front (+z)
                 addFace(6, 5, 1, 2, 0); // right (+x)
             }
-
+            res.computeTangents();
 			return res;
 		}
 
@@ -173,7 +246,7 @@ namespace lib
                 Float phi = (Float(i) + shift) / Float(N) * glm::two_pi<Float>();
 
                 Vector2 circle_point = { std::cos(phi), std::sin(phi) };
-                Vector3 pos = center.m_position + radius * Vector3{circle_point[0], 0, circle_point[1]};
+                Vector3 pos = center.position + radius * Vector3{circle_point[0], 0, circle_point[1]};
                 Vector2 uv = h * circle_point  + Vector2{0.5, 0.5};
                 Vertex vertex = { pos, normal, uv };
                 res.m_vertices.push_back(vertex);
@@ -185,6 +258,7 @@ namespace lib
                     res.addFace(center_id, i, next);
             }
             res.m_vertices.push_back(center);
+            res.computeTangents();
             return res;
         }
 
@@ -220,6 +294,7 @@ namespace lib
                     res.addFace(next_down, down_id, next_up);
                 }
             }
+            res.computeTangents();
             return res;
         }
 
@@ -240,7 +315,6 @@ namespace lib
                 Shape disk = Disk(N, center + Vector3{ 0, -h, 0 }, r_down, false, shift);
                 res.merge(disk);
             }
-
             return res;
         }
 	};
