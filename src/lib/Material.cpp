@@ -6,6 +6,7 @@ namespace lib
 
 	
 	std::shared_ptr<ProgramDesc> Phong<float>::s_phong_shader = std::make_shared<ProgramDesc>(Material::s_shader_path.string() + "phong");
+	std::shared_ptr<ProgramDesc> Cartoon<float>::s_cartoon_shader = std::make_shared<ProgramDesc>(Material::s_shader_path.string() + "cartoon");
 	
 
 	Material::Material(std::shared_ptr<ProgramDesc> const& program):

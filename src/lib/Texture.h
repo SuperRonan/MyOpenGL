@@ -38,11 +38,37 @@ namespace lib
 	{
 	protected:
 
-		static_assert(std::is_same<T, img::RGB<unsigned char>>::value);
-
 		using Image = img::Image<T>;
 
 		Image m_img;
+
+		static constexpr GLint GL_PIXEL_TYPE()
+		{
+			if constexpr (((img::is_RGB<T>::value || img::is_RGBA<T>::value) && std::is_same<T::_Type, unsigned char>::value) || std::is_same<T, unsigned char>::value)
+			{
+				return GL_UNSIGNED_BYTE;
+			}
+			// TODO static assert
+			assert(false, std::string("Unsuported texture pixel type for OpenGL: ") + typeid(T).name());
+		}
+
+		static constexpr GLint GL_PIXEL_FORMAT()
+		{
+			if constexpr (img::is_RGB<T>::value)
+			{
+				return GL_RGB;
+			}
+			if constexpr (img::is_RGBA<T>::value)
+			{
+				return GL_RGBA;
+			}
+			if constexpr (std::is_same<T, unsigned char>::value)
+			{
+				return GL_RED;
+			}
+			// TODO static assert
+			assert(false, std::string("Unsuported texture format for OpenGL: ") + typeid(T).name());
+		}
 
 	public:
 
@@ -90,7 +116,7 @@ namespace lib
 			glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
 			glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
 			glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
-			glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, m_img.width(), m_img.height(), 0, GL_RGB, GL_UNSIGNED_BYTE, m_img.data());
+			glTexImage2D(GL_TEXTURE_2D, 0, GL_PIXEL_FORMAT(), m_img.width(), m_img.height(), 0, GL_PIXEL_FORMAT(), GL_PIXEL_TYPE(), m_img.data());
 			glGenerateMipmap(GL_TEXTURE_2D);
 		}
 

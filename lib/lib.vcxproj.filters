@@ -124,6 +124,12 @@
     <None Include="..\shaders\vector.frag">
       <Filter>shaders</Filter>
     </None>
+    <None Include="..\shaders\cartoon.vert">
+      <Filter>shaders</Filter>
+    </None>
+    <None Include="..\shaders\cartoon.frag">
+      <Filter>shaders</Filter>
+    </None>
   </ItemGroup>
   <ItemGroup>
     <Image Include="..\ressources\brickwall.jpg">

@@ -121,26 +121,49 @@ int main()
 
     Scene scene;
     {
-        img::Image<img::io::RGBu> img_diffuse = img::io::read<img::io::RGBu>("../ressources/brickwall.png");
-        img::Image<img::io::RGBu> img_normal = img::io::read<img::io::RGBu>("../ressources/brickwall_normal.png");
-        reverseNormal(img_normal, false, true);
+        img::Image<img::io::RGBu> img_diffuse = img::io::read<img::io::RGBu>("../ressources/brickwall2/albedo.jpg");
+        img::Image<img::io::RGBu> img_rough = img::io::read<img::io::RGBu>("../ressources/brickwall2/roughness.jpg");
+        img::Image<img::io::RGBu> img_normal = img::io::read<img::io::RGBu>("../ressources/brickwall2/normal.jpg");
+        //reverseNormal(img_normal, false, true);
+        img::Image<img::io::RGBu> img_height = img::io::read<img::io::RGBu>("../ressources/brickwall2/height.png");
+        
+        // normal height
+        img::Image<img::io::RGBAu> img_nh(img_normal.width(), img_normal.height());
+        // diffuse roughness
+        img::Image<img::io::RGBAu> img_dr(img_diffuse.width(), img_diffuse.height());
+        img_nh.loop1D([&](int i)
+            {
+                img::io::RGBAu& pixel = img_nh[i];
+                pixel.rgb = img_normal[i];
+                pixel.a = img_height[i][0];
+            });
+        img_diffuse.loop1D([&](int i)
+            {
+                img::io::RGBAu pixel = img_dr[i];
+                pixel.rgb = img_diffuse[i];
+                pixel.a = img_rough[i][0];
+            });
 
         std::shared_ptr<lib::Texture> texture_diffuse = std::make_shared<lib::_Texture<img::io::RGBu>>(img_diffuse);
-        std::shared_ptr<lib::Texture> texture_normal = std::make_shared<lib::_Texture<img::io::RGBu>>(img_normal);
-        
+        std::shared_ptr<lib::Texture> texture_nh = std::make_shared<lib::_Texture<img::io::RGBAu>>(img_nh);
         texture_diffuse->sendToDevice();
-        texture_normal->sendToDevice();
+        texture_nh->sendToDevice();
         texture_diffuse->deleteHost();
-        texture_normal->deleteHost();
+        texture_nh->deleteHost();
 
         tex_lib.add("diffuse", texture_diffuse);
-        tex_lib.add("normal", texture_normal);
+        tex_lib.add("normal", texture_nh);
 
         std::shared_ptr<lib::Phong<float>> phong = std::make_shared<lib::Phong<float>>(
             lib::Phong<float>(lib::Vector3f{ 1, 1, 1 }, lib::Vector4f{ 1.f, 1.f, 1.f, 100.f }));
         phong->m_diffuse_tex = texture_diffuse;
-        phong->m_normal_map = texture_normal;
+        phong->m_nh_map = texture_nh;
+        std::shared_ptr<lib::Cartoon<float>> cartoon = std::make_shared<lib::Cartoon<float>>(
+            lib::Vector3f{ 1, 1, 1 }, lib::Vector4f{ 0, 0, 0, 100 });
+        cartoon->m_diffuse_tex = texture_diffuse;
+        cartoon->m_nh_map = texture_nh;
         mat_lib.add("phong", phong);
+        mat_lib.add("cartoon", cartoon);
 
         std::shared_ptr<lib::Material> emissive = mat_lib.addDerived("emissive", lib::Phong<float>(lib::Vector3f(0), lib::Vector4f(0, 0, 0, 1), lib::Vector3f(1)));
         std::shared_ptr<lib::ProgramDesc> vector_prog = prog_lib.addBase("vector_viewer", lib::ProgramDesc(lib::Material::shaderPath().string() + "vector", true));
@@ -174,7 +197,7 @@ int main()
 
         std::shared_ptr<Node> cube_node = std::make_shared<Node>(lib::scaleMatrix<4, float>(0.1));
         cube_node->emplaceNew<Drawable>(cube, emissive);
-        cube_node->emplaceNew<Light>(Light::PointLight(Vector3(0), Vector3(5)));
+        cube_node->emplaceNew<Light>(Light::PointLight(Vector3(0), Vector3(1)));
         
         Node node1 = lib::translateMatrix<4, float>(Vector3{ 2.f, 1.5f, 1.f });
         LambdaNode rotate = LambdaNode([](float t, float dt, Matrix4& mat)
@@ -218,7 +241,7 @@ int main()
         mouse_handler.update(dt);
         //mouse_handler.print(std::cout);
         {
-            const float cam_speed = 3.f;
+            const float cam_speed = 1.f;
             scene.m_camera.move(zqsd * float(dt) * cam_speed);
         }
         glClearColor(scene.m_ambiant[0], scene.m_ambiant[1], scene.m_ambiant[2], 1.0);

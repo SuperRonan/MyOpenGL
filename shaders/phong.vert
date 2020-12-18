@@ -12,10 +12,13 @@ uniform mat4 u_M;
 uniform mat4 u_V;
 uniform mat4 u_P;
 
-out vec2 v_uv;
-out vec3 v_w_position;
-out vec3 v_w_normal;
-out vec3 v_w_tangent;
+out Varying
+{
+	vec2 uv;
+	vec3 w_position;
+	vec3 w_normal;
+	vec3 w_tangent;
+} v_;
 
 mat3 normalMatrix(in mat4 transform)
 {
@@ -31,8 +34,8 @@ void main()
 	
 	mat3 normal_mat = normalMatrix(u_M);
 
-	v_uv = a_uv;
-	v_w_position = (u_M * h_pos).xyz;
-	v_w_normal = normalize(normal_mat * a_normal);
-	v_w_tangent = normalize(normal_mat * a_tangent);
+	v_.uv = a_uv;
+	v_.w_position = (u_M * h_pos).xyz;
+	v_.w_normal = normalize(normal_mat * a_normal);
+	v_.w_tangent = normalize(normal_mat * a_tangent);
 }

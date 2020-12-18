@@ -178,6 +178,8 @@
     <ClCompile Include="..\src\lib\Window.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <None Include="..\shaders\cartoon.frag" />
+    <None Include="..\shaders\cartoon.vert" />
     <None Include="..\shaders\phong.frag" />
     <None Include="..\shaders\phong.vert" />
     <None Include="..\shaders\vector.frag" />
