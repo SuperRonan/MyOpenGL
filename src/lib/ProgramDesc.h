@@ -37,6 +37,8 @@ namespace lib
 
 		ProgramDesc(std::string const& shader_name, bool geometry=false);
 
+		ProgramDesc(std::string const& vert_name, std::string const& geom_name, std::string const& frag_name);
+
 		~ProgramDesc();
 
 		bool link();
@@ -110,8 +112,13 @@ namespace lib
 			{
 				glUniform2uiv(u_id, 1, glm::value_ptr(value));
 			}
+			else if constexpr (std::is_same<glm::ivec3, T>::value)
+			{
+				glUniform3iv(u_id, 1, glm::value_ptr(value));
+			}
 			else
 			{
+				std::cerr << "Unrecognized uniform type " << typeid(T).name << std::endl;
 				// Type T is not recognized
 				return false;
 			}

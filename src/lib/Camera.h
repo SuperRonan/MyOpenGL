@@ -3,6 +3,7 @@
 #include <glm/gtc/matrix_transform.hpp>
 #include "Math.h"
 #include "Component.h"
+#include <glm/gtc/matrix_inverse.hpp>
 
 namespace lib
 {
@@ -91,5 +92,21 @@ namespace lib
 		{
 			m_type = type;
 		}
+
+		Vector2<Float> getClip()const
+		{
+			return m_clip;
+		}
+
+		Float fov()const
+		{
+			return m_fov;
+		}
+
+		Vector3 getDirection()const
+		{
+			return m_front;
+		}
+
 	};
 }

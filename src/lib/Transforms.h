@@ -1,10 +1,21 @@
 #pragma once
 
+#include <cmath>
 #include "Math.h"
 #include <glm/gtc/matrix_transform.hpp>
 
 namespace lib
 {
+	template <class Float>
+	MatrixN<2, Float> rotate2D(Float angle)
+	{
+		MatrixN<2, Float> res;
+		res[0][0] = res[1][1] = cos(angle);
+		res[0][1] = sin(angle);
+		res[1][0] = -res[0][1];
+		return res;
+	}
+
 	template <int N, class Float>
 	MatrixN<N, Float> scaleMatrix(Vector<N-1, Float> const& vector)
 	{

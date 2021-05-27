@@ -44,6 +44,13 @@ namespace lib
 		m_id(0)
 	{}
 
+	ProgramDesc::ProgramDesc(std::string const& vert_name, std::string const& geom_name, std::string const& frag_name) :
+		m_vertex_shader(std::make_shared<ShaderDesc>(vert_name + ".vert", GL_VERTEX_SHADER)),
+		m_fragment_shader(std::make_shared<ShaderDesc>(frag_name + ".frag", GL_FRAGMENT_SHADER)),
+		m_geometry_shader(std::make_shared<ShaderDesc>(geom_name + ".geom", GL_GEOMETRY_SHADER)),
+		m_id(0)
+	{}
+
 	ProgramDesc::~ProgramDesc()
 	{
 		if (isLinked())
